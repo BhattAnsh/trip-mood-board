@@ -1,0 +1,815 @@
+/* Import handwriting fonts */
+@import '@fontsource/caveat';
+@import '@fontsource/indie-flower';
+@import '@fontsource/shadows-into-light';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* Base theme color variables - these will be set by ThemeProvider */
+    --mood-color: #60A5E6; /* Default blue */
+    --mood-color-rgb: 96, 165, 230;
+    
+    /* Derived theme colors for neomorphic effects */
+    --mood-color-light: rgba(var(--mood-color-rgb), 0.08); /* Subtle tint for backgrounds */
+    --mood-color-bright: rgba(var(--mood-color-rgb), 0.15); /* For light shadows */
+    --mood-color-dark: rgba(var(--mood-color-rgb), 0.25); /* For dark shadows */
+    
+    /* Calculate tinted background based on theme */
+    --neo-bg: rgba(240, 240, 243, 1); /* Base background */
+    --neo-bg-tinted: linear-gradient(145deg, var(--neo-bg), rgba(var(--mood-color-rgb), 0.08)); /* More visible gradient */
+    
+    /* Dynamic shadow colors that adapt to theme */
+    --neo-shadow-light: rgba(255, 255, 255, 0.9);
+    --neo-shadow-dark: rgba(186, 190, 204, 0.85);
+    --neo-shadow-dark-themed: rgba(var(--mood-color-rgb), 0.25);
+
+    /* Neomorphic dynamic shadow variables - more defined */
+    --neo-shadow-flat: 5px 5px 10px var(--neo-shadow-dark), -5px -5px 10px var(--neo-shadow-light);
+    --neo-shadow-pressed: inset 3px 3px 6px var(--neo-shadow-dark), inset -3px -3px 6px var(--neo-shadow-light);
+    --neo-shadow-convex: 5px 5px 10px var(--neo-shadow-dark), -5px -5px 10px var(--neo-shadow-light), inset 1px 1px 2px var(--neo-shadow-light), inset -1px -1px 2px var(--neo-shadow-dark);
+    --neo-shadow-card: 7px 7px 14px var(--neo-shadow-dark), -7px -7px 14px var(--neo-shadow-light);
+    --neo-shadow-card-hover: 9px 9px 18px var(--neo-shadow-dark), -9px -9px 18px var(--neo-shadow-light);
+
+    /* Theme color-influenced neomorphic shadows - more defined */
+    --neo-mood-shadow-flat: 5px 5px 10px var(--neo-shadow-dark-themed), -5px -5px 10px var(--neo-shadow-light);
+    --neo-mood-shadow-pressed: inset 3px 3px 6px var(--neo-shadow-dark-themed), inset -3px -3px 6px var(--neo-shadow-light);
+    --neo-mood-shadow-convex: 5px 5px 10px var(--neo-shadow-dark-themed), -5px -5px 10px var(--neo-shadow-light), inset 1px 1px 2px var(--neo-shadow-light), inset -1px -1px 2px var(--mood-color-dark);
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+    
+    /* Text color with theme influence */
+    --neo-text: #444452;
+    --neo-text-theme: rgba(var(--mood-color-rgb), 0.9);
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-neo-bg text-neo-text;
+    background-image: linear-gradient(145deg, var(--neo-bg), var(--mood-color-light));
+    background-attachment: fixed;
+  }
+  
+  /* Neomorphic styles */
+  .neo-flat {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-shadow-flat);
+    @apply rounded-xl;
+  }
+  
+  .neo-pressed {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-shadow-pressed);
+    @apply rounded-xl;
+  }
+  
+  .neo-convex {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-shadow-convex);
+    @apply rounded-xl;
+  }
+
+  /* Theme colored neomorphic elements */
+  .neo-mood-flat {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-mood-shadow-flat);
+    @apply rounded-xl;
+  }
+  
+  .neo-mood-pressed {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-mood-shadow-pressed);
+    @apply rounded-xl;
+  }
+  
+  .neo-mood-convex {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-mood-shadow-convex);
+    @apply rounded-xl;
+  }
+
+  .neo-button {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-shadow-flat);
+    @apply rounded-xl px-4 py-2 transition-all duration-200;
+  }
+  
+  .neo-button:hover {
+    box-shadow: var(--neo-shadow-convex);
+  }
+  
+  .neo-button:active {
+    box-shadow: var(--neo-shadow-pressed);
+  }
+
+  /* Special button styles for accent/important actions */
+  .neo-button.bg-mood-color {
+    background: var(--mood-color);
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.3);
+  }
+  
+  .neo-button.bg-mood-color:hover {
+    box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.25), -4px -4px 8px rgba(255, 255, 255, 0.35);
+    transform: translateY(-1px);
+  }
+  
+  .neo-button.bg-mood-color:active {
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -2px -2px 5px rgba(255, 255, 255, 0.15);
+    transform: translateY(0);
+  }
+
+  .neo-input {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-shadow-pressed);
+    @apply rounded-xl px-4 py-2 outline-none transition-all duration-200;
+  }
+  
+  .neo-input:focus {
+    box-shadow: var(--neo-mood-shadow-pressed);
+  }
+  
+  /* Custom neomorphic scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* Chrome/Safari/Opera */
+  }
+  
+  .neo-scrollbar {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    bottom: 2px;
+    width: 8px;
+    border-radius: 4px;
+    background: var(--neo-bg-tinted);
+    box-shadow: inset 2px 2px 4px var(--neo-shadow-dark-themed), 
+                inset -2px -2px 4px var(--neo-shadow-light);
+    opacity: 0.7;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    z-index: 10;
+  }
+  
+  .neo-scrollbar::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border-radius: 3px;
+    background: var(--mood-color);
+    opacity: 0.5;
+    transform: scaleY(0.8);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  .neo-scrollbar.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  
+  .neo-scrollbar.visible::after {
+    opacity: 0.7;
+    transform: scaleY(0.9);
+  }
+  
+  /* Dynamic theme color classes */
+  .text-mood-color {
+    color: var(--mood-color);
+  }
+  
+  .bg-mood-color {
+    background-color: var(--mood-color);
+  }
+  
+  .border-mood-color {
+    border-color: var(--mood-color);
+  }
+  
+  /* Opacity variants */
+  .bg-mood-color-10 {
+    background-color: rgba(var(--mood-color-rgb), 0.1);
+  }
+  
+  .bg-mood-color-20 {
+    background-color: rgba(var(--mood-color-rgb), 0.2);
+  }
+  
+  .bg-mood-color-50 {
+    background-color: rgba(var(--mood-color-rgb), 0.5);
+  }
+
+  /* Gradient backgrounds for landing page */
+  .bg-gradient-to-br {
+    background-size: 200% 200%;
+  }
+
+  .bg-gradient-to-r {
+    background-size: 200% 100%;
+  }
+
+  /* Wave animation for the music section */
+  @keyframes waveAnimation {
+    0% { transform: scaleY(1); }
+    50% { transform: scaleY(1.5); }
+    100% { transform: scaleY(1); }
+  }
+
+  /* Additional hover scale */
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+
+  /* Neomorphic Calendar Styles */
+  .neo-calendar {
+    @apply mx-auto;
+    width: 100% !important;
+    font-size: 0.875rem;
+    @apply bg-transparent;
+  }
+
+  .neo-card {
+    background: var(--neo-bg-tinted);
+    box-shadow: var(--neo-shadow-card);
+    transition: all 0.3s ease;
+  }
+
+  .neo-calendar .rdp-day {
+    transition: all 0.2s ease;
+    width: 2rem !important;
+    height: 2rem !important;
+    margin: 0 auto;
+    line-height: 2rem !important;
+    padding: 0 !important;
+  }
+
+  .neo-calendar .rdp-day:hover:not([aria-selected="true"]) {
+    background-color: var(--mood-color-light);
+    box-shadow: 2px 2px 5px var(--neo-shadow-dark), -2px -2px 5px var(--neo-shadow-light);
+  }
+
+  .neo-calendar .rdp-day[aria-selected="true"] {
+    background-color: var(--mood-color);
+    color: white;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2), inset -2px -2px 4px rgba(255, 255, 255, 0.2);
+  }
+
+  .neo-calendar .rdp-head_cell {
+    color: var(--mood-color);
+    font-weight: 500;
+  }
+  
+  /* Sidebar overrides for border removal and calendar visibility */
+  [data-sidebar="sidebar"] {
+    border: none !important;
+  }
+
+  /* Ensure expanded sidebar has enough width for calendar */
+  .group-data-\[state\=expanded\]:w-\[--sidebar-width\] {
+    width: 350px !important;
+  }
+
+  /* Fix calendar overflow issues */
+  .rdp-months {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .rdp-month {
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Ensure rows and days remain visible and centered */
+  .rdp-row, .rdp-head_row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  /* Calendar day cells */
+  .rdp-cell {
+    width: calc(100% / 7);
+  }
+  
+  /* Fix calendar caption spacing */
+  .rdp-caption {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  /* Animation for sticker hover effect */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+  
+  @keyframes pinGlow {
+    0% {
+      box-shadow: 0 0 5px 2px rgba(var(--mood-color-rgb), 0.3);
+    }
+    50% {
+      box-shadow: 0 0 8px 3px rgba(var(--mood-color-rgb), 0.5);
+    }
+    100% {
+      box-shadow: 0 0 5px 2px rgba(var(--mood-color-rgb), 0.3);
+    }
+  }
+  
+  @keyframes rise {
+    0% {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .animate-rise {
+    animation: rise 0.3s ease-out forwards;
+  }
+  
+  /* Cork board texture */
+  .cork-board {
+    background-color: #d8b78e;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4a76a' fill-opacity='0.12' fill-rule='evenodd'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='24' cy='24' r='1'/%3E%3Ccircle cx='36' cy='36' r='1'/%3E%3Ccircle cx='48' cy='48' r='1'/%3E%3Ccircle cx='60' cy='60' r='1'/%3E%3Ccircle cx='72' cy='72' r='1'/%3E%3Ccircle cx='84' cy='84' r='1'/%3E%3Ccircle cx='96' cy='96' r='1'/%3E%3C/g%3E%3C/svg%3E");
+    background-blend-mode: soft-light;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Pushpin styling */
+  .pushpin {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    z-index: 10;
+    animation: pinGlow 3s ease-in-out infinite;
+  }
+  
+  /* Memory sticker styling */
+  .memory-sticker {
+    background-color: white;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+  }
+  
+  .memory-sticker:hover {
+    animation: float 1s ease-in-out infinite;
+  }
+  
+  /* Emoji sticker styling - no background, just the emoji */
+  .emoji-sticker {
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
+  }
+  
+  .emoji-sticker:hover {
+    animation: float 1s ease-in-out infinite;
+    transform: scale(1.15);
+  }
+  
+  .emoji-content {
+    display: inline-block;
+    transform-origin: center;
+    transition: transform 0.2s ease;
+    will-change: transform;
+  }
+  
+  /* Polaroid-style image */
+  .polaroid {
+    background: white;
+    padding: 10px 10px 20px 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  
+  .polaroid img {
+    width: 100%;
+    height: calc(100% - 20px);
+    object-fit: cover;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Tape elements for polaroid images */
+  .tape {
+    position: absolute;
+    width: 40px;
+    height: 15px;
+    background-color: rgba(255, 255, 255, 0.7);
+    opacity: 0.7;
+    z-index: 5;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transform: rotate(-2deg);
+  }
+  
+  .tape-left {
+    top: -5px;
+    left: 20%;
+    transform: rotate(-10deg);
+  }
+  
+  .tape-right {
+    top: -3px;
+    right: 20%;
+    transform: rotate(12deg);
+  }
+
+  .polaroid::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+  }
+  
+  /* Physical Ticket styling - replacing ticket-stub */
+  .physical-ticket {
+    background: linear-gradient(45deg, #FFF8E1, #FFFFFF);
+    padding: 12px 15px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    border: 1px dashed rgba(0,0,0,0.1);
+    border-left: 4px solid var(--mood-color);
+  }
+  
+  /* Ticket holes */
+  .ticket-holes-left {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 10px;
+    width: 2px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+  
+  .ticket-holes-left::before,
+  .ticket-holes-left::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #f0f0f3;
+    border: 1px solid rgba(0,0,0,0.1);
+    position: absolute;
+    left: -3px;
+  }
+  
+  .ticket-holes-left::before {
+    top: 20%;
+  }
+  
+  .ticket-holes-left::after {
+    bottom: 20%;
+  }
+  
+  .ticket-holes-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 10px;
+    width: 2px;
+  }
+  
+  .ticket-holes-right::before,
+  .ticket-holes-right::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #f0f0f3;
+    border: 1px solid rgba(0,0,0,0.1);
+    position: absolute;
+    right: -3px;
+  }
+  
+  .ticket-holes-right::before {
+    top: 20%;
+  }
+  
+  .ticket-holes-right::after {
+    bottom: 20%;
+  }
+  
+  .physical-ticket::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10px;
+    right: 10px;
+    height: 2px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--mood-color) 0,
+      var(--mood-color) 3px,
+      transparent 3px,
+      transparent 6px
+    );
+  }
+  
+  /* Post-it note styling */
+  .post-it {
+    background: #feff9c;
+    padding: 10px;
+    box-shadow: 2px 2px 3px rgba(0,0,0,0.1);
+    transform: rotate(-1deg);
+  }
+  
+  /* Thread visualization that connects pins */
+  .thread-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .thread {
+    position: absolute;
+    background-color: var(--mood-color);
+    opacity: 0.5;
+    transform-origin: 0 0;
+    height: 1px;
+    width: 100px;
+    pointer-events: none;
+  }
+  
+  /* Decorative pattern for a board header */
+  .memory-board-header {
+    position: relative;
+    text-align: center;
+    background: white;
+    padding: 10px 15px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+    border-radius: 4px;
+    margin-bottom: 15px;
+    z-index: 10;
+  }
+  
+  .memory-board-header::before,
+  .memory-board-header::after {
+    content: '';
+    position: absolute;
+    background: rgba(var(--mood-color-rgb), 0.8);
+    width: 20px;
+    height: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .memory-board-header::before {
+    left: -30px;
+  }
+  
+  .memory-board-header::after {
+    right: -30px;
+  }
+}
+
+/* Handwriting text styles */
+.handwritten-text {
+  font-family: 'Caveat', cursive;
+  line-height: 1.3;
+  letter-spacing: 0.5px;
+}
+
+.handwritten-indie {
+  font-family: 'Indie Flower', cursive;
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+}
+
+.handwritten-shadows {
+  font-family: 'Shadows Into Light', cursive;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+}
+
+/* Random rotation for handwritten text */
+.hand-rotate-1 {
+  transform: rotate(-2deg);
+}
+
+.hand-rotate-2 {
+  transform: rotate(1deg);
+}
+
+.hand-rotate-3 {
+  transform: rotate(-1deg);
+}
+
+/* Different handwriting styles for different types of content */
+.ticket-text {
+  font-family: 'Shadows Into Light', cursive;
+}
+
+.note-text {
+  font-family: 'Indie Flower', cursive;
+}
+
+.list-text {
+  font-family: 'Caveat', cursive;
+}
+
+/* Add ink bleed effect for handwritten text */
+.handwritten-text, .handwritten-indie, .handwritten-shadows, 
+.ticket-text, .note-text, .list-text {
+  color: rgba(0, 0, 0, 0.8);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+  line-height: 1.3;
+}
+
+/* Custom styling for each sticker type */
+.physical-ticket .ticket-text {
+  font-family: 'Shadows Into Light', cursive;
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 2;
+}
+
+.post-it .list-text {
+  font-family: 'Caveat', cursive;
+  font-size: 1.1rem;
+}
+
+.memory-sticker .note-text {
+  /* Custom text style for memory stickers */
+}
+
+/* Library preview styles for emoji and ticket stickers */
+.emoji-preview {
+  background: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  position: relative;
+  overflow: visible;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.emoji-preview:hover {
+  transform: scale(1.15) translateY(-3px);
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+}
+
+.emoji-preview:active {
+  transform: scale(1.05) translateY(0);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+}
+
+.ticket-preview {
+  background: linear-gradient(45deg, #FFF8E1, #FFFFFF);
+  border-radius: 6px;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px dashed rgba(0,0,0,0.1);
+  border-left: 3px solid var(--mood-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ticket-preview:hover {
+  box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+.ticket-preview-holes-left,
+.ticket-preview-holes-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+}
+
+.ticket-preview-holes-left {
+  left: 8px;
+}
+
+.ticket-preview-holes-right {
+  right: 8px;
+}
+
+.ticket-preview-holes-left::before,
+.ticket-preview-holes-left::after,
+.ticket-preview-holes-right::before,
+.ticket-preview-holes-right::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #f0f0f3;
+  border: 1px solid rgba(0,0,0,0.1);
+  position: absolute;
+}
+
+.ticket-preview-holes-left::before,
+.ticket-preview-holes-right::before {
+  top: 20%;
+}
+
+.ticket-preview-holes-left::after,
+.ticket-preview-holes-right::after {
+  bottom: 20%;
+}
+
+.ticket-preview-holes-left::before,
+.ticket-preview-holes-left::after {
+  left: -2px;
+}
+
+.ticket-preview-holes-right::before,
+.ticket-preview-holes-right::after {
+  right: -2px;
+}
