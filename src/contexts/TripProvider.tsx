@@ -83,7 +83,7 @@ export const TripProvider = ({ children }: TripProviderProps) => {
           if (currentTrip) {
             setCurrentTrip(currentTrip);
             // Update theme if available
-            if (theme) {
+            if (theme && theme.setCurrentMoodColor) {
               theme.setCurrentMoodColor(currentTrip.moodColor);
             }
           }
@@ -97,7 +97,7 @@ export const TripProvider = ({ children }: TripProviderProps) => {
       // If no trips in localStorage, initialize with sample trips
       initializeSampleTrips();
     }
-  }, [theme]);
+  }, []);
 
   // Initialize with sample trip data
   const initializeSampleTrips = () => {
@@ -147,7 +147,7 @@ export const TripProvider = ({ children }: TripProviderProps) => {
     setCurrentDay(0);
     
     // Update theme if available
-    if (theme) {
+    if (theme?.setCurrentMoodColor) {
       theme.setCurrentMoodColor(moodColor);
     }
     
@@ -162,7 +162,7 @@ export const TripProvider = ({ children }: TripProviderProps) => {
       setCurrentDay(0);
       
       // Update the theme if available
-      if (theme) {
+      if (theme?.setCurrentMoodColor) {
         theme.setCurrentMoodColor(trip.moodColor);
       }
       

@@ -1,26 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTrip } from '../hooks/use-trip';
 import { useTheme } from '../hooks/use-theme';
-import { useIsMobile } from '../hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Upload, Bookmark, Map, MapPin, TabletSmartphone, Info } from 'lucide-react';
-
-// Mobile notice component for sticker library
-const MobileLibraryNotice = ({ colorHex }: { colorHex: string }) => (
-  <div className="mb-4 p-3 rounded-lg border border-neo-border bg-neo-bg" style={{ borderColor: `${colorHex}30` }}>
-    <div className="flex gap-2 items-start">
-      <div className="rounded-full p-1.5" style={{ backgroundColor: `${colorHex}20` }}>
-        <Info size={16} style={{ color: colorHex }} />
-      </div>
-      <div>
-        <p className="text-xs text-neo-text">
-          <span className="font-medium" style={{ color: colorHex }}>Mobile View:</span> You can view the sticker library, 
-          but for the best experience with adding stickers to your memory board, please switch to a tablet or desktop device.
-        </p>
-      </div>
-    </div>
-  </div>
-);
+import { Plus, Upload, Bookmark, Map, MapPin } from 'lucide-react';
 
 const emojis = [
   '🏔️', '🌊', '🏝️', '🌄', '🌅', '🌇', '🌃', '🏙️',
@@ -60,7 +42,6 @@ const defaultImages = [
 const StickerLibrary = () => {
   const { addSticker, currentTrip } = useTrip();
   const { getMoodColorHex } = useTheme();
-  const isMobile = useIsMobile();
   const [customLabel, setCustomLabel] = useState('');
   const [uploadedImages, setUploadedImages] = useState<string[]>(defaultImages);
   const [isScrolling, setIsScrolling] = useState(true);
@@ -155,19 +136,12 @@ const StickerLibrary = () => {
     // Provide visual feedback that map was added
     alert('Map added! You can now pin memories to your map.');
   };
-  
-  // Skip rendering on mobile - it's already filtered in the Index component, but this is a safeguard
-  if (isMobile) return null;
-  
-  if (!currentTrip) return null;
 
-  const colorHex = getMoodColorHex(currentTrip.moodColor);
+  if (!currentTrip) return null;
 
   return (
     <div className="w-full h-full flex flex-col relative z-20">
       <h2 className="text-xl font-semibold mb-2 text-mood-color">Sticker Library</h2>
-      
-      {isMobile && <MobileLibraryNotice colorHex={colorHex} />}
       
       <Tabs defaultValue="emojis" className="w-full flex-1 flex flex-col" onValueChange={handleTabChange}>
         <TabsList className="grid grid-cols-5 mb-3">

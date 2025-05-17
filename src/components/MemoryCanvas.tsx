@@ -2,166 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTrip } from '../hooks/use-trip';
 import { Sticker } from '../types';
 import { useTheme } from '../hooks/use-theme';
-import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader, TabletSmartphone, Calendar } from 'lucide-react';
+import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader } from 'lucide-react';
 import { annotate, annotationGroup } from 'rough-notation';
 import { toPng } from 'html-to-image';
-import { useIsMobile } from '../hooks/use-mobile';
-import { format } from 'date-fns';
-
-// Mobile notice component for small screens
-const MobileNotice = ({ colorHex }: { colorHex: string }) => {
-  const { currentTrip } = useTrip();
-  
-  if (!currentTrip) return null;
-  
-  return (
-    <div className="absolute inset-0 z-50 p-4 flex flex-col items-center justify-center bg-neo-bg bg-opacity-95 overflow-y-auto">
-      <div className="shadow-neo-card rounded-xl p-6 bg-white w-full max-w-xs mx-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold" style={{ color: colorHex }}>
-            Trip Summary
-          </h3>
-          <div className="w-6 h-6 rounded-full" style={{ backgroundColor: colorHex }} />
-        </div>
-        
-        {/* Trip details */}
-        <div className="space-y-3 mb-4">
-          <div className="rounded-lg p-3" style={{ backgroundColor: `${colorHex}10` }}>
-            <h4 className="font-medium mb-1" style={{ color: colorHex }}>
-              {currentTrip.title || "My Trip"}
-            </h4>
-            {currentTrip.startDate && (
-              <div className="flex items-center text-sm text-neo-text">
-                <Calendar size={14} className="mr-1" style={{ color: colorHex }} />
-                {format(new Date(currentTrip.startDate), 'MMM d')} 
-                {currentTrip.endDate && (
-                  <>
-                    {" "}- {format(new Date(currentTrip.endDate), 'MMM d, yyyy')}
-                  </>
-                )}
-              </div>
-            )}
-            {currentTrip.location && (
-              <div className="flex items-center text-sm text-neo-text">
-                <MapPin size={14} className="mr-1" style={{ color: colorHex }} />
-                {currentTrip.location}
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Sticker collage preview */}
-        <div className="mb-4">
-          <h4 className="text-sm mb-2" style={{ color: colorHex }}>Trip Memories</h4>
-          <div className="relative rounded-lg overflow-hidden h-36 border border-neo-border">
-            <div className="absolute inset-0 bg-gradient-to-b from-[#e6e9ef] to-[#d4dae6] flex items-center justify-center">
-              {currentTrip.stickers.length > 0 ? (
-                <div className="absolute inset-0">
-                  {/* Display up to 3 emoji stickers from the trip */}
-                  {currentTrip.stickers
-                    .filter(s => s.type === 'emoji')
-                    .slice(0, 3)
-                    .map((sticker, index) => (
-                      <div 
-                        key={sticker.id}
-                        className="absolute shadow-neo-flat px-2 py-1 rounded-lg bg-white hover:scale-110 transition-transform"
-                        style={{
-                          top: `${15 + (index * 25)}%`,
-                          left: `${10 + (index * 15)}%`,
-                          transform: `rotate(${-5 + (index * 5)}deg)`
-                        }}
-                      >
-                        <span className="text-lg">{sticker.content}</span>
-                      </div>
-                    ))
-                  }
-                  
-                  {/* Display up to 2 label stickers */}
-                  {currentTrip.stickers
-                    .filter(s => s.type === 'label')
-                    .slice(0, 2)
-                    .map((sticker, index) => (
-                      <div 
-                        key={sticker.id}
-                        className="absolute shadow-neo-flat px-2 py-1 rounded-lg bg-white hover:scale-110 transition-transform"
-                        style={{
-                          top: `${20 + (index * 30)}%`,
-                          right: `${15 + (index * 12)}%`,
-                          transform: `rotate(${3 - (index * 6)}deg)`,
-                          maxWidth: '40%'
-                        }}
-                      >
-                        <p className="text-xs line-clamp-1" style={{ color: colorHex }}>
-                          {sticker.content}
-                        </p>
-                      </div>
-                    ))
-                  }
-                  
-                  {/* Display a date indicator */}
-                  <div className="absolute bottom-3 left-1/4 shadow-neo-flat px-2 py-1 rounded-lg bg-white hover:scale-110 transition-transform">
-                    <div className="flex items-center">
-                      <Calendar size={14} className="mr-1" style={{ color: colorHex }} />
-                      <span className="text-xs">
-                        {currentTrip.startDate ? format(new Date(currentTrip.startDate), 'MMM d') : 'Trip date'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center text-sm opacity-50">
-                  <ImageIcon size={24} className="mx-auto mb-2" />
-                  No memories added yet
-                </div>
-              )}
-            </div>
-            
-            {/* Map preview with pin */}
-            {currentTrip.location && (
-              <div className="absolute top-2 right-2 bottom-2 left-1/2 rounded-lg border border-neo-border overflow-hidden">
-                <div className="absolute inset-0 bg-[#e9edf3]">
-                  {/* Map dots background */}
-                  <div className="absolute inset-0 pattern-dots text-blue-500 opacity-20"></div>
-                  
-                  {/* Map grid lines */}
-                  <div className="absolute inset-0 pattern-grid text-slate-500 opacity-10"></div>
-                  
-                  {/* Location pin */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div 
-                      className="w-6 h-6 rounded-full flex items-center justify-center animate-bounce-slow shadow-md"
-                      style={{ backgroundColor: colorHex }}
-                    >
-                      <MapPin size={12} className="text-white" />
-                    </div>
-                  </div>
-                  
-                  {/* Location name */}
-                  <div className="absolute bottom-1 right-1 bg-white rounded px-1.5 py-0.5 text-[10px] font-medium shadow-sm">
-                    {currentTrip.location.split(',')[0]}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        
-        {/* CTA button */}
-        <div className="text-center">
-          <p className="text-sm text-neo-text mb-3">
-            For the full experience, please access this trip board on a tablet or desktop device.
-          </p>
-          <button 
-            className="neo-button-raised px-4 py-2 w-full rounded-full font-medium"
-            style={{ backgroundColor: `${colorHex}20`, color: colorHex }}
-          >
-            View Full Board on Desktop
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const MemoryCanvas = () => {
   const { 
@@ -182,7 +25,6 @@ const MemoryCanvas = () => {
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
   
   // Add zoom and pan state
   const [scale, setScale] = useState(1);
@@ -1304,11 +1146,6 @@ const MemoryCanvas = () => {
       className="relative w-full h-full overflow-hidden rounded-lg transition-all duration-200 cork-board"
       style={{ zIndex: 0 }}
     >
-      {/* Mobile Experience Notice */}
-      {isMobile && (
-        <MobileNotice colorHex={getMoodColorHex(currentTrip?.moodColor || 'blue')} />
-      )}
-
       {/* Title Header */}
       {stickers.length > 0 && currentTrip && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -1324,19 +1161,18 @@ const MemoryCanvas = () => {
         ref={canvasRef}
         className="absolute inset-0 focus:outline-none"
         tabIndex={0}
-        onMouseDown={isMobile ? undefined : handleCanvasPanStart}
-        onMouseUp={isMobile ? undefined : handleMouseUp}
-        onMouseMove={isMobile ? undefined : handleMouseMove}
-        onMouseLeave={isMobile ? undefined : handleMouseUp}
-        onWheel={isMobile ? undefined : handleWheel}
-        onClick={isMobile ? undefined : handleCanvasClick}
+        onMouseDown={handleCanvasPanStart}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
+        onClick={handleCanvasClick}
         style={{
           overflow: 'hidden', // Prevent scroll on the canvas
           cursor: isPanning ? 'grabbing' : 'default',
           zIndex: 1,
           filter: editingStickerID ? 'blur(3px)' : 'none',
-          transition: 'filter 0.3s ease',
-          pointerEvents: isMobile ? 'none' : 'auto' // Disable interactions on mobile
+          transition: 'filter 0.3s ease'
         }}
       >
         {/* Render the canvas content with transformation */}
@@ -1357,53 +1193,51 @@ const MemoryCanvas = () => {
           )}
         </div>
 
-        {/* Updated controls with export button - hidden on mobile */}
-        {!isMobile && (
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10 bg-white bg-opacity-80 rounded-lg p-1.5 shadow-md">
-            <button
-              onClick={handleZoomOut}
-              className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
-              aria-label="Zoom out"
-              disabled={isExporting}
-            >
-              <ZoomOut size={18} />
-            </button>
-            <button
-              onClick={handleResetZoom}
-              className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
-              aria-label="Reset zoom"
-              disabled={isExporting}
-            >
-              <RefreshCw size={18} />
-            </button>
-            <button
-              onClick={handleZoomIn}
-              className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
-              aria-label="Zoom in"
-              disabled={isExporting}
-            >
-              <ZoomIn size={18} />
-            </button>
-            <div className="w-px h-5 bg-gray-300 mx-1"></div>
-            <button
-              onClick={handleExportImage}
-              className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors flex items-center gap-1"
-              aria-label="Export as image"
-              title="Export as image"
-              disabled={isExporting}
-            >
-              {isExporting ? (
-                <Loader size={18} className="animate-spin" />
-              ) : (
-                <Download size={18} />
-              )}
-            </button>
-          </div>
-        )}
+        {/* Updated controls with export button */}
+        <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10 bg-white bg-opacity-80 rounded-lg p-1.5 shadow-md">
+          <button
+            onClick={handleZoomOut}
+            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
+            aria-label="Zoom out"
+            disabled={isExporting}
+          >
+            <ZoomOut size={18} />
+          </button>
+          <button
+            onClick={handleResetZoom}
+            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
+            aria-label="Reset zoom"
+            disabled={isExporting}
+          >
+            <RefreshCw size={18} />
+          </button>
+          <button
+            onClick={handleZoomIn}
+            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
+            aria-label="Zoom in"
+            disabled={isExporting}
+          >
+            <ZoomIn size={18} />
+          </button>
+          <div className="w-px h-5 bg-gray-300 mx-1"></div>
+          <button
+            onClick={handleExportImage}
+            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors flex items-center gap-1"
+            aria-label="Export as image"
+            title="Export as image"
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader size={18} className="animate-spin" />
+            ) : (
+              <Download size={18} />
+            )}
+          </button>
+        </div>
       </div>
       
-      {/* Edit Modal - only shown on desktop */}
-      {!isMobile && renderEditModal()}
+      {/* Edit Modal */}
+      {renderEditModal()}
     </div>
   );
 };
