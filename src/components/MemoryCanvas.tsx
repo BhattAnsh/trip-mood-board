@@ -3,7 +3,6 @@ import { useTrip } from '../hooks/use-trip';
 import { Sticker } from '../types';
 import { useTheme } from '../hooks/use-theme';
 import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader } from 'lucide-react';
-import { annotate, annotationGroup } from 'rough-notation';
 import { toPng } from 'html-to-image';
 
 const MemoryCanvas = () => {
@@ -34,10 +33,6 @@ const MemoryCanvas = () => {
   // Stores if map outline has been added to the canvas
   const [hasMap, setHasMap] = useState(false);
 
-  // Add state for text elements that need animation
-  const textRefs = useRef(new Map<string, HTMLParagraphElement>());
-  const [hasAppliedNotation, setHasAppliedNotation] = useState(false);
-  
   // New state for popup editing
   const [editingStickerID, setEditingStickerID] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -60,6 +55,14 @@ const MemoryCanvas = () => {
     pixelRatio?: number;
     quality?: number;
     cacheBust?: boolean;
+    canvasWidth?: number;
+    canvasHeight?: number;
+    style?: {
+      margin?: string;
+      padding?: string;
+      boxShadow?: string;
+      [key: string]: string | undefined;
+    };
     [key: string]: unknown;
   } = {}, maxAttempts = 3) => {
     let dataUrl = '';
@@ -364,54 +367,6 @@ const MemoryCanvas = () => {
     boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.2)'
   };
 
-  // Create a function to apply handwriting annotation effect
-  const applyHandwritingEffects = () => {
-    if (!hasAppliedNotation && textRefs.current.size > 0) {
-      const annotations = Array.from(textRefs.current.entries()).map(([id, element]) => {
-        // Apply different notation styles based on content type
-        const content = stickers.find(s => s.id === id)?.content || '';
-        
-        if (content.includes('✓')) {
-          // For to-do lists, use underline
-          return annotate(element, { type: 'underline', color: 'rgba(0,0,0,0.3)', strokeWidth: 2 });
-        } else if (content.includes('Ticket') || content.includes('Receipt')) {
-          // For tickets, use highlight
-          return annotate(element, { type: 'highlight', color: 'rgba(255,251,214,0.7)' });
-        } else {
-          // For regular notes, use box
-          return annotate(element, { 
-            type: 'box', 
-            color: 'rgba(0,0,0,0.2)', 
-            strokeWidth: 1, 
-            padding: 2,
-            iterations: 2 
-          });
-        }
-      });
-      
-      // Show all annotations with a staggered effect
-      const ag = annotationGroup(annotations);
-      ag.show();
-      
-      setHasAppliedNotation(true);
-    }
-  };
-  
-  // Apply notation when stickers change
-  useEffect(() => {
-    if (stickers.length > 0) {
-      // Reset the hasAppliedNotation state when stickers change
-      setHasAppliedNotation(false);
-      
-      // Wait for elements to render
-      const timer = setTimeout(() => {
-        applyHandwritingEffects();
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [stickers]);
-
   // Add a function to get a random handwriting class
   const getRandomHandwritingClass = (stickerId: string, content: string) => {
     // Deterministic randomness based on sticker ID
@@ -602,10 +557,6 @@ const MemoryCanvas = () => {
             />
             
             <p 
-              ref={(el) => {
-                if (el) textRefs.current.set(sticker.id, el);
-                else textRefs.current.delete(sticker.id);
-              }}
               className={`select-none text-neo-text whitespace-pre-line ${handwritingClass}`}
               style={{
                 textDecoration: sticker.content.includes('✓') ? 'line-through' : 'none',
@@ -901,10 +852,29 @@ const MemoryCanvas = () => {
           screenshotContainer.style.zIndex = '-9999';
           screenshotContainer.style.pointerEvents = 'none';
           
+          // Add a special class to allow CSS to target elements inside the screenshot container
+          screenshotContainer.className = 'export-container';
+          
+          // Add a style tag to disable rough-annotation elements in the export
+          const styleTag = document.createElement('style');
+          styleTag.textContent = `
+            .export-container .rough-annotation, 
+            .export-container svg.rough-annotation {
+              display: none !important;
+              visibility: hidden !important;
+              opacity: 0 !important;
+            }
+          `;
+          document.head.appendChild(styleTag);
+          
           // Add cork background
           screenshotContainer.style.backgroundImage = `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4a76a' fill-opacity='0.12' fill-rule='evenodd'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='24' cy='24' r='1'/%3E%3Ccircle cx='36' cy='36' r='1'/%3E%3Ccircle cx='48' cy='48' r='1'/%3E%3Ccircle cx='60' cy='60' r='1'/%3E%3Ccircle cx='72' cy='72' r='1'/%3E%3Ccircle cx='84' cy='84' r='1'/%3E%3Ccircle cx='96' cy='96' r='1'/%3E%3C/g%3E%3C/svg%3E")`;
           screenshotContainer.style.backgroundColor = '#d8b78e';
           screenshotContainer.style.backgroundBlendMode = 'soft-light';
+          screenshotContainer.style.boxShadow = 'inset 0 0 30px rgba(0, 0, 0, 0.2)';
+          screenshotContainer.style.border = '8px solid #b5916d';
+          screenshotContainer.style.borderRadius = '4px';
+          screenshotContainer.style.outline = 'none';
           
           document.body.appendChild(screenshotContainer);
           
@@ -931,6 +901,102 @@ const MemoryCanvas = () => {
             screenshotContainer.appendChild(headerDiv);
           }
           
+          // Add decorative pins in corners of the board
+          const addCornerPin = (top: boolean, left: boolean, rotate: number) => {
+            const pinDiv = document.createElement('div');
+            pinDiv.style.position = 'absolute';
+            pinDiv.style.top = top ? '20px' : 'auto';
+            pinDiv.style.bottom = !top ? '20px' : 'auto';
+            pinDiv.style.left = left ? '20px' : 'auto';
+            pinDiv.style.right = !left ? '20px' : 'auto';
+            pinDiv.style.transform = `rotate(${rotate}deg)`;
+            
+            const pinHead = document.createElement('div');
+            pinHead.style.width = '16px';
+            pinHead.style.height = '16px';
+            pinHead.style.backgroundColor = getMoodColorHex(currentTrip?.moodColor || 'blue');
+            pinHead.style.borderRadius = '50%';
+            pinHead.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            
+            pinDiv.appendChild(pinHead);
+            screenshotContainer.appendChild(pinDiv);
+          };
+          
+          // Add pins at corners
+          addCornerPin(true, true, -5);
+          addCornerPin(true, false, 5);
+          addCornerPin(false, true, -8);
+          addCornerPin(false, false, 8);
+          
+          // Render decorative threads to connect stickers
+          if (stickers.length >= 3) {
+            const maxConnections = Math.min(5, stickers.length - 1);
+            
+            for (let i = 0; i < maxConnections; i++) {
+              const startIdx = i;
+              const endIdx = (i + 1) % stickers.length;
+              
+              const startSticker = stickers[startIdx];
+              const endSticker = stickers[endIdx];
+              
+              // Calculate center points
+              const startX = startSticker.position.x + startSticker.size.width / 2;
+              const startY = startSticker.position.y + startSticker.size.height / 2;
+              const endX = endSticker.position.x + endSticker.size.width / 2;
+              const endY = endSticker.position.y + endSticker.size.height / 2;
+              
+              // Calculate distance and angle
+              const dx = endX - startX;
+              const dy = endY - startY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+              
+              // Create thread element
+              const threadDiv = document.createElement('div');
+              threadDiv.className = 'thread';
+              
+              // Apply styles
+              threadDiv.style.position = 'absolute';
+              threadDiv.style.left = `${startX}px`;
+              threadDiv.style.top = `${startY}px`;
+              threadDiv.style.width = `${distance}px`;
+              threadDiv.style.height = '3px';
+              threadDiv.style.transform = `rotate(${angle}deg)`;
+              threadDiv.style.transformOrigin = '0 0';
+              threadDiv.style.backgroundColor = getMoodColorHex(currentTrip?.moodColor || 'blue');
+              threadDiv.style.opacity = '0.75';
+              threadDiv.style.pointerEvents = 'none';
+              threadDiv.style.zIndex = '1'; // Lower z-index so threads appear behind stickers
+              
+              // Add small dots at connection points to ensure threads look attached
+              const startDot = document.createElement('div');
+              startDot.style.position = 'absolute';
+              startDot.style.width = '6px';
+              startDot.style.height = '6px'; 
+              startDot.style.borderRadius = '50%';
+              startDot.style.backgroundColor = getMoodColorHex(currentTrip?.moodColor || 'blue');
+              startDot.style.opacity = '0.75';
+              startDot.style.left = `${startX - 3}px`;  
+              startDot.style.top = `${startY - 3}px`;
+              startDot.style.zIndex = '1'; // Lower z-index
+              
+              const endDot = document.createElement('div');
+              endDot.style.position = 'absolute';
+              endDot.style.width = '6px';
+              endDot.style.height = '6px'; 
+              endDot.style.borderRadius = '50%';
+              endDot.style.backgroundColor = getMoodColorHex(currentTrip?.moodColor || 'blue');
+              endDot.style.opacity = '0.75';
+              endDot.style.left = `${endX - 3}px`;  
+              endDot.style.top = `${endY - 3}px`;
+              endDot.style.zIndex = '1'; // Lower z-index
+              
+              screenshotContainer.appendChild(startDot);
+              screenshotContainer.appendChild(endDot);
+              screenshotContainer.appendChild(threadDiv);
+            }
+          }
+          
           // Collect all image promises to wait for loading
           const imagePromises: Promise<void>[] = [];
           
@@ -944,6 +1010,7 @@ const MemoryCanvas = () => {
             stickerDiv.style.top = `${sticker.position.y}px`;
             stickerDiv.style.width = `${sticker.size.width}px`;
             stickerDiv.style.height = `${sticker.size.height}px`;
+            stickerDiv.style.zIndex = '10'; // Higher z-index so stickers appear above threads
             
             // Generate rotation
             const rotationSeed = sticker.id.charCodeAt(0) % 10;
@@ -968,10 +1035,17 @@ const MemoryCanvas = () => {
               
               // Create promise for image loading
               const imagePromise = new Promise<void>((resolve) => {
-                mapImg.onload = () => resolve();
-                mapImg.onerror = () => resolve();
+                mapImg.onload = () => {
+                  console.log("Image loaded successfully:", sticker.content);
+                  resolve();
+                };
+                mapImg.onerror = (err) => {
+                  console.error("Error loading image:", sticker.content, err);
+                  // Still resolve to continue the process
+                  resolve();
+                };
                 // Safari sometimes doesn't fire these events
-                setTimeout(resolve, 500);
+                setTimeout(resolve, 1000); // Longer timeout for images
               });
               imagePromises.push(imagePromise);
               
@@ -1030,29 +1104,53 @@ const MemoryCanvas = () => {
               img.style.height = '100%';
               img.style.maxHeight = 'calc(100% - 30px)';
               img.style.objectFit = 'cover';
+              img.style.display = 'block'; // Ensure display is block
               
               // Create promise for image loading
               const imagePromise = new Promise<void>((resolve) => {
-                img.onload = () => resolve();
-                img.onerror = () => resolve();
+                img.onload = () => {
+                  console.log("Image loaded successfully:", sticker.content);
+                  resolve();
+                };
+                img.onerror = (err) => {
+                  console.error("Error loading image:", sticker.content, err);
+                  // Still resolve to continue the process
+                  resolve();
+                };
                 // Safari sometimes doesn't fire these events
-                setTimeout(resolve, 500);
+                setTimeout(resolve, 1000); // Longer timeout for images
               });
               imagePromises.push(imagePromise);
               
               stickerDiv.appendChild(img);
             }
             else if (sticker.type === 'label') {
-              // Label sticker (notes)
+              // Label sticker (notes) - Let's completely customize the rendering
               const colorIndex = sticker.id.charCodeAt(0) % 6;
               const colors = ['#ffffa5', '#ffcfcf', '#cfe8ff', '#d6ffd6', '#f2e2ff', '#fff2e2'];
-              stickerDiv.style.backgroundColor = colors[colorIndex];
-              stickerDiv.style.padding = '12px';
-              stickerDiv.style.borderRadius = '2px';
+              
+              // Create a completely new div for the note
+              const noteDiv = document.createElement('div');
+              noteDiv.style.position = 'absolute';
+              noteDiv.style.left = '0';
+              noteDiv.style.top = '0';
+              noteDiv.style.width = '100%';
+              noteDiv.style.height = '100%';
+              noteDiv.style.backgroundColor = colors[colorIndex];
+              noteDiv.style.padding = '12px';
+              noteDiv.style.boxSizing = 'border-box';
+              noteDiv.style.borderRadius = '2px';
+              noteDiv.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+              
+              // Explicitly reset all border-related properties
+              noteDiv.style.border = '0';
+              noteDiv.style.outline = '0';
+              noteDiv.style.borderImage = 'none';
+              noteDiv.style.borderStyle = 'none';
+              noteDiv.style.borderWidth = '0';
               
               // Add pushpin
               const pushpin = document.createElement('div');
-              pushpin.className = 'pushpin';
               pushpin.style.position = 'absolute';
               pushpin.style.top = '5px';
               pushpin.style.left = '50%';
@@ -1063,13 +1161,23 @@ const MemoryCanvas = () => {
               pushpin.style.backgroundColor = getMoodColorHex(currentTrip?.moodColor || 'blue');
               pushpin.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.2)';
               
-              stickerDiv.appendChild(pushpin);
+              noteDiv.appendChild(pushpin);
               
               // Add text content
               const textP = document.createElement('p');
               textP.style.whiteSpace = 'pre-line';
               textP.style.color = 'rgba(0, 0, 0, 0.8)';
               textP.textContent = sticker.content;
+              
+              // Reset all potentially problematic styles
+              textP.style.border = '0';
+              textP.style.outline = '0';
+              textP.style.borderImage = 'none';
+              textP.style.borderStyle = 'none';
+              textP.style.borderWidth = '0';
+              textP.style.padding = '0';
+              textP.style.margin = '5px 0 0 0';
+              textP.style.boxShadow = 'none';
               
               // Apply handwriting styles
               const handwritingClass = sticker.id.charCodeAt(0) % 3;
@@ -1085,33 +1193,63 @@ const MemoryCanvas = () => {
                 textP.style.textDecoration = 'line-through';
               }
               
-              stickerDiv.appendChild(textP);
+              noteDiv.appendChild(textP);
+              stickerDiv.appendChild(noteDiv);
+              
+              // Apply the same resets to the parent sticker div
+              stickerDiv.style.border = '0';
+              stickerDiv.style.outline = '0';
+              stickerDiv.style.borderImage = 'none';
+              stickerDiv.style.borderStyle = 'none';
+              stickerDiv.style.borderWidth = '0';
+              stickerDiv.style.backgroundColor = 'transparent';
+              stickerDiv.style.boxShadow = 'none';
             }
             
             screenshotContainer.appendChild(stickerDiv);
           });
           
-          // Wait for all images to load
-          await Promise.all(imagePromises);
-          
-          // Add a small delay for Safari
-          if (isSafari()) {
-            await new Promise(resolve => setTimeout(resolve, 300));
+          // Wait for all images to load with extended timeout
+          try {
+            const imageLoadingTimeout = new Promise<void>(resolve => setTimeout(resolve, 1500));
+            await Promise.race([
+              Promise.all(imagePromises),
+              imageLoadingTimeout
+            ]);
+            
+            // Add a small delay for Safari
+            if (isSafari()) {
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } else {
+              await new Promise(resolve => setTimeout(resolve, 300));
+            }
+          } catch (err) {
+            console.error("Error waiting for images:", err);
           }
           
           // Use multiple attempts to generate the PNG
           const retryAttempts = isSafari() ? 5 : 3;
           const dataUrl = await generatePngWithRetry(screenshotContainer, {
-            backgroundColor: '#f5f1e6',
+            backgroundColor: '#d8b78e', // Match the cork board color exactly
             width: canvasSize.width,
             height: canvasSize.height,
-            pixelRatio: 3,
-            quality: 0.95,
-            cacheBust: true
+            pixelRatio: 4, // Increase resolution
+            quality: 1.0, // Maximum quality
+            canvasWidth: canvasSize.width,
+            canvasHeight: canvasSize.height,
+            cacheBust: true,
+            style: {
+              margin: '0',
+              padding: '0',
+              boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.2)',
+              border: 'none',
+              outline: 'none'
+            }
           }, retryAttempts);
           
           // Clean up
           document.body.removeChild(screenshotContainer);
+          document.head.removeChild(styleTag);
           
           if (dataUrl) {
             // Create download link with nice filename

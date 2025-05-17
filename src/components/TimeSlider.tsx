@@ -8,14 +8,25 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useIsMobile } from '../hooks/use-mobile';
 
 const TimeSlider = () => {
-  const { currentTrip, currentDay, setCurrentDay, getTripDuration, setDayCount } = useTrip();
+  const { currentTrip, currentDay, setCurrentDay } = useTrip();
   const { getMoodColorHex } = useTheme();
   const isMobile = useIsMobile();
+  
+  // Calculate trip duration from startDate and endDate
+  const getTripDuration = useCallback(() => {
+    if (!currentTrip) return 1;
+    const diffTime = Math.abs(
+      currentTrip.endDate.getTime() - currentTrip.startDate.getTime()
+    );
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Add 1 to include the start day
+  }, [currentTrip]);
+  
+  const duration = getTripDuration();
+  
   const [hasInitialAnimation, setHasInitialAnimation] = useState(false);
   const [isGlowing, setIsGlowing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTimelineDot, setActiveTimelineDot] = useState<number | null>(null);
-  const duration = currentTrip?.duration || 1;
   const [isDragging, setIsDragging] = useState(false);
   const trackRef = useRef<HTMLDivElement>(null);
   const dialRef = useRef<HTMLDivElement>(null);
@@ -27,9 +38,7 @@ const TimeSlider = () => {
   const [lastTunedDay, setLastTunedDay] = useState<number>(currentDay);
   const [showDisplay, setShowDisplay] = useState(true);
   
-  // Skip rendering on mobile - it's already filtered in the Index component, but this is a safeguard
-  if (isMobile) return null;
-  
+  // Knob state
   const [knobRotation, setKnobRotation] = useState(0);
   const [knobDragging, setKnobDragging] = useState(false);
   const [knobStartAngle, setKnobStartAngle] = useState(0);
@@ -52,30 +61,33 @@ const TimeSlider = () => {
 
     const markersArray: { day: number; label: string }[] = [];
 
+    // Always show ALL days for trips with duration <= MAX_MARKERS
     if (duration <= MAX_MARKERS) {
       for (let i = 0; i < duration; i++) {
         markersArray.push({ day: i, label: formatDay(i) });
       }
-    } else {
-      markersArray.push({ day: 0, label: formatDay(0) });
-      const numIntermediateMarkers = Math.min(duration - 2, MAX_MARKERS - 2);
-      const step = (duration - 1) / (numIntermediateMarkers + 1);
-      
-      for (let i = 1; i <= numIntermediateMarkers; i++) {
-        const day = Math.round(i * step);
-        if (!markersArray.find(m => m.day === day) && day < duration - 1 && day > 0) {
-          markersArray.push({ day: day, label: formatDay(day) });
-        }
+      return markersArray;
+    } 
+    
+    // For longer trips, intelligently space out the markers
+    markersArray.push({ day: 0, label: formatDay(0) });
+    const numIntermediateMarkers = Math.min(duration - 2, MAX_MARKERS - 2);
+    const step = (duration - 1) / (numIntermediateMarkers + 1);
+    
+    for (let i = 1; i <= numIntermediateMarkers; i++) {
+      const day = Math.round(i * step);
+      if (!markersArray.find(m => m.day === day) && day < duration - 1 && day > 0) {
+        markersArray.push({ day: day, label: formatDay(day) });
       }
-      
-      markersArray.push({ day: duration - 1, label: formatDay(duration - 1) });
-      
-      const uniqueSortedMarkers = [...new Map(markersArray.map(item => [item.day, item])).values()]
-                                 .sort((a, b) => a.day - b.day);
-      
-      return uniqueSortedMarkers;
     }
-    return markersArray;
+    
+    // Always add the last day
+    markersArray.push({ day: duration - 1, label: formatDay(duration - 1) });
+    
+    const uniqueSortedMarkers = [...new Map(markersArray.map(item => [item.day, item])).values()]
+                               .sort((a, b) => a.day - b.day);
+    
+    return uniqueSortedMarkers;
   }, [duration, currentTrip, formatDay]);
 
   const getProgressPercentage = useCallback((dayToCalculate: number) => {
@@ -125,7 +137,7 @@ const TimeSlider = () => {
       }
     }
   });
-
+  
   // Add glowing effect when tuning
   useEffect(() => {
     if (isDragging || tuningNoise) {
@@ -172,6 +184,12 @@ const TimeSlider = () => {
   useEffect(() => {
     setKnobRotation(currentDay * (360 / Math.max(duration, 1)));
   }, [currentDay, duration]);
+  
+  // Skip rendering on mobile - it's already filtered in the Index component, but this is a safeguard
+  if (isMobile) return null;
+  if (!currentTrip) return null;
+
+  const timelineDisplayMarkers = generatedTimelineMarkers();
 
   const handlePlayPause = () => {
     if (duration <= 1) return;
@@ -324,10 +342,6 @@ const TimeSlider = () => {
     setTimeout(() => setActiveTimelineDot(null), 500);
     setCurrentDay(day);
   };
-
-  if (!currentTrip) return null;
-
-  const timelineDisplayMarkers = generatedTimelineMarkers();
 
   const renderDayDisplay = () => {
     const dayLabel = formatDay(currentDay);
