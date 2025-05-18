@@ -89,12 +89,12 @@ const TripsPage = () => {
   ];
 
   return (
-    <div className="h-screen w-screen overflow-auto bg-neo-bg relative">
+    <div className="min-h-screen w-screen overflow-auto bg-neo-bg relative">
       {/* Floating Header */}
       <Header />
       
-      {/* Content with padding to account for the floating header */}
-      <div className="max-w-6xl mx-auto pt-20 px-4 pb-8">
+      {/* Content with padding to account for the header */}
+      <div className="max-w-6xl mx-auto pt-24 sm:pt-28 px-4 pb-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-mood-color">My Trips</h1>
           <button 

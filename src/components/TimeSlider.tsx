@@ -185,8 +185,6 @@ const TimeSlider = () => {
     setKnobRotation(currentDay * (360 / Math.max(duration, 1)));
   }, [currentDay, duration]);
   
-  // Skip rendering on mobile - it's already filtered in the Index component, but this is a safeguard
-  if (isMobile) return null;
   if (!currentTrip) return null;
 
   const timelineDisplayMarkers = generatedTimelineMarkers();
@@ -366,30 +364,31 @@ const TimeSlider = () => {
     const tripIcon = getTripIcon();
     
     return (
-      <div className="mt-6 text-center">
+      <div className="w-full text-center pb-1 sm:pb-2">
         <animated.div 
-          className={`inline-flex items-center justify-center space-x-2 rounded-xl transition-all duration-200 text-mood-color py-3 px-6 shadow-md ${isGlowing ? 'radio-display-glow' : ''}`}
+          className={`inline-flex items-center justify-center space-x-1 sm:space-x-2 rounded-xl transition-all duration-200 text-mood-color py-2 sm:py-3 px-3 sm:px-6 shadow-md ${isGlowing ? 'radio-display-glow' : ''}`}
           style={{
             ...dayBadgeSpring,
             background: 'linear-gradient(145deg, rgba(var(--mood-color-rgb), 0.15), rgba(var(--mood-color-rgb), 0.25))',
             border: `1px solid rgba(var(--mood-color-rgb), 0.3)`,
             fontFamily: "'VT323', monospace",
-            fontSize: '1.35rem'
+            fontSize: '1.1rem',
+            maxWidth: '100%'
           }}
         >
           {duration > 1 ? (
             <>
-              <span className="font-medium radio-digit flex items-center">
-                {tripIcon && <span className="mr-2">{tripIcon}</span>}
+              <span className="font-medium radio-digit flex items-center text-sm sm:text-base">
+                {tripIcon && <span className="mr-1 sm:mr-2">{tripIcon}</span>}
                 DAY {currentDay + 1}
               </span>
-              <span className="radio-date-separator mx-2 opacity-80">|</span>
-              <span className="font-medium radio-digit uppercase">
+              <span className="radio-date-separator mx-1 sm:mx-2 opacity-80">|</span>
+              <span className="font-medium radio-digit uppercase text-sm sm:text-base">
                 {dayLabel}
               </span>
             </>
           ) : (
-            <span className="font-medium radio-digit uppercase">
+            <span className="font-medium radio-digit uppercase text-sm sm:text-base">
               {dayLabel}
             </span>
           )}
@@ -399,15 +398,15 @@ const TimeSlider = () => {
   };
 
   return (
-    <div className="w-full py-2 px-2 md:px-3 animate-fade-in select-none">
-      <div className="flex justify-between items-center mb-2">
+    <div className="w-full h-full py-2 px-1 md:px-3 animate-fade-in select-none flex flex-col">
+      <div className="flex justify-between items-center mb-1 px-1">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <h2 className="text-base font-semibold flex items-center gap-1 text-mood-color cursor-help">
-                <Radio size={16} className="opacity-80" />
+              <h2 className="text-sm sm:text-base font-semibold flex items-center gap-1 text-mood-color cursor-help">
+                <Radio size={14} className="opacity-80" />
                 <span>Trip Radio</span>
-                <Info size={12} className="opacity-60" />
+                <Info size={10} className="opacity-60" />
               </h2>
             </TooltipTrigger>
             <TooltipContent className="p-2 max-w-xs">
@@ -420,22 +419,22 @@ const TimeSlider = () => {
           <button
             onClick={handlePlayPause}
             disabled={duration <= 1}
-            className={`p-1 rounded-full h-7 w-7 flex items-center justify-center transition-colors ${
+            className={`p-1 rounded-full h-6 w-6 sm:h-7 sm:w-7 flex items-center justify-center transition-colors ${
               isPlaying ? 'text-mood-color' : 'text-neo-text'
             }`}
             aria-label={isPlaying ? 'Pause' : 'Play'}
           >
-            {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+            {isPlaying ? <Pause size={14} /> : <Play size={14} />}
           </button>
         </div>
       </div>
 
-      <div className="relative h-10 flex items-center">
+      <div className="relative h-8 sm:h-10 flex items-center px-1">
         {/* Add a tuning knob on the right */}
         <div className="flex-1 relative z-10">
           <div
             ref={trackRef}
-            className="relative w-full h-6 cursor-pointer rounded-xl overflow-hidden"
+            className="relative w-full h-5 sm:h-6 cursor-pointer rounded-xl overflow-hidden"
             onClick={handleTrackClick}
             style={{
               background: 'rgba(var(--mood-color-rgb), 0.1)',
@@ -469,7 +468,7 @@ const TimeSlider = () => {
             </animated.div>
           </div>
 
-          <div className="relative w-full flex justify-between px-0.5 text-[10px] mt-1 text-mood-color">
+          <div className="relative w-full flex justify-between px-0.5 text-[8px] sm:text-[10px] mt-1 text-mood-color">
             {timelineDisplayMarkers.map((marker, idx) => (
               <div 
                 key={idx} 
@@ -477,7 +476,7 @@ const TimeSlider = () => {
                 onClick={() => handleTimelineDotClick(marker.day)}
               >
                 <div 
-                  className={`h-3 w-3 rounded-full transition-all duration-200 cursor-pointer
+                  className={`h-2 w-2 sm:h-3 sm:w-3 rounded-full transition-all duration-200 cursor-pointer
                     ${currentDay === marker.day ? 'radio-timeline-dot-active' : ''}
                     ${activeTimelineDot === marker.day ? 'radio-timeline-dot-pulse' : ''}
                   `}
@@ -487,7 +486,7 @@ const TimeSlider = () => {
                   }}
                 />
                 <span 
-                  className={`mt-1 cursor-pointer transition-all duration-200 hover:font-medium
+                  className={`mt-1 cursor-pointer transition-all duration-200 hover:font-medium hidden xs:inline-block
                     ${currentDay === marker.day ? 'font-medium' : 'opacity-80 hover:opacity-100'}
                   `}
                 >
@@ -504,7 +503,7 @@ const TimeSlider = () => {
             <TooltipTrigger asChild>
               <animated.div 
                 ref={knobRef}
-                className="ml-3 h-16 w-16 rounded-full bg-white shadow-neo-card flex items-center justify-center cursor-pointer relative"
+                className="ml-2 sm:ml-3 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-white shadow-neo-card flex items-center justify-center cursor-pointer relative"
                 style={{
                   transform: knobSpring.rotation.to(r => `rotate(${r}deg)`),
                   boxShadow: isGlowing ? '0 0 8px var(--mood-color), inset 0 0 3px rgba(var(--mood-color-rgb), 0.5)' : 'inset 0 0 3px rgba(0, 0, 0, 0.1)',
@@ -541,7 +540,9 @@ const TimeSlider = () => {
         </TooltipProvider>
       </div>
 
-      {renderDayDisplay()}
+      <div className="flex-1 flex items-center justify-center">
+        {renderDayDisplay()}
+      </div>
     </div>
   );
 };

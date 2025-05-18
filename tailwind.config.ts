@@ -201,6 +201,10 @@ export default {
 			scale: {
 				'102': '1.02',
 			},
+			height: {
+				'bottom-panel-mobile': '50vh',
+				'bottom-panel-desktop': '24vh',
+			},
 		}
 	},
 	plugins: [

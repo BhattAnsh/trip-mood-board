@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTrip } from '../hooks/use-trip';
 import { Sticker } from '../types';
 import { useTheme } from '../hooks/use-theme';
-import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader, PlusCircle, Music, ChevronRight } from 'lucide-react';
+import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader, PlusCircle, Music, ChevronRight, ChevronLeft } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { useNavigate } from 'react-router-dom';
 
 const MemoryCanvas = ({ 
   toggleRightPanel, 
@@ -16,6 +17,7 @@ const MemoryCanvas = ({
   isRightPanelOpen?: boolean,
   isBottomPanelOpen?: boolean
 } = {}) => {
+  const navigate = useNavigate();
   const { 
     currentTrip, 
     currentDay, 
@@ -1415,6 +1417,21 @@ const MemoryCanvas = ({
       <div className="absolute bottom-[8px] left-[8px] w-4 h-4 rounded-full bg-[#A0A0A0] shadow-inner border-2 border-[#707070] z-20" style={{ boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.3)' }} />
       <div className="absolute bottom-[8px] right-[8px] w-4 h-4 rounded-full bg-[#A0A0A0] shadow-inner border-2 border-[#707070] z-20" style={{ boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.3)' }} />
       
+      {/* Back Button in top left corner */}
+      <div className="absolute top-[35px] left-[35px] z-30">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(-1);
+          }}
+          className="p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-gray-100 transition-all duration-200 border border-white/30 flex items-center justify-center text-mood-color"
+          aria-label="Go Back"
+          title="Go Back"
+        >
+          <ChevronLeft size={18} />
+        </button>
+      </div>
+      
       {/* New Bottom Control Bar */}
       <div className="absolute bottom-[30px] left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
         <button
@@ -1423,10 +1440,10 @@ const MemoryCanvas = ({
             if (toggleBottomPanel) toggleBottomPanel();
           }}
           className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md hover:bg-gray-100 transition-all duration-200 border border-white/30 flex items-center space-x-2"
-          title={isBottomPanelOpen ? "Close Bottom Bar" : "Open Bottom Bar"}
+          title={isBottomPanelOpen ? "Close Music & Timeline Panel" : "Open Music & Timeline Panel"}
         >
           <Music size={18} className="text-mood-color" />
-          <span className="text-sm text-mood-color">Bottom Bar</span>
+          <span className="text-sm text-mood-color">Music Player & Timeline</span>
         </button>
         <button
           onClick={(e) => {
@@ -1434,10 +1451,10 @@ const MemoryCanvas = ({
             if (toggleRightPanel) toggleRightPanel();
           }}
           className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md hover:bg-gray-100 transition-all duration-200 border border-white/30 flex items-center space-x-2"
-          title={isRightPanelOpen ? "Close Right Side Bar" : "Open Right Side Bar"}
+          title={isRightPanelOpen ? "Close Stickers & Photos Panel" : "Open Stickers & Photos Panel"}
         >
           <PlusCircle size={18} className="text-mood-color" />
-          <span className="text-sm text-mood-color">Right Side Bar</span>
+          <span className="text-sm text-mood-color">Add Stickers & Photos</span>
         </button>
       </div>
       

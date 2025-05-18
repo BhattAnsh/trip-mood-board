@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import Header from '../components/Header';
 import { 
   Plane, 
   Camera, 
@@ -313,106 +314,12 @@ const TestimonialCard = ({
 );
 
 const Landing = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  // Close mobile menu when clicking on navigation links
-  const handleNavLinkClick = () => {
-    setMobileMenuOpen(false);
-  };
 
   return (
     <ThemeProvider>
       <div className="min-h-screen bg-neo-bg">
-        {/* Header/Navigation - Neomorphic Style with mobile menu */}
-        <header className="py-4 px-4 sm:py-5 sm:px-6 md:px-10 flex justify-between items-center sticky top-0 z-50 bg-neo-bg bg-opacity-95 backdrop-blur-sm shadow-neo-flat">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="shadow-neo-flat w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center bg-mood-color-10">
-              <Plane size={18} className="text-mood-color sm:text-20" />
-            </div>
-            <h1 className="text-lg sm:text-xl font-bold text-mood-color">Trip Canvas Vibes</h1>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-neo-text hover:text-mood-color transition-colors">Features</a>
-            <a href="#about" className="text-neo-text hover:text-mood-color transition-colors">About</a>
-            <a href="#testimonials" className="text-neo-text hover:text-mood-color transition-colors">Testimonials</a>
-          </div>
-          
-          <div className="flex gap-3 sm:gap-4 items-center">
-            <Link to="/app/trips" className="hidden sm:flex neo-button text-mood-color bg-mood-color-10 hover:bg-mood-color-20 transition-all duration-300 px-3 sm:px-4 py-2">
-              Get Started
-            </Link>
-            
-            {/* Mobile menu button */}
-            <button 
-              className="md:hidden shadow-neo-flat w-9 h-9 rounded-lg flex items-center justify-center bg-mood-color-10 text-mood-color"
-              onClick={toggleMobileMenu}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile Navigation Menu */}
-        <div className={`fixed inset-0 bg-neo-bg z-40 transform transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} md:hidden`}>
-          <div className="h-full flex flex-col p-6">
-            <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-3">
-                <div className="shadow-neo-flat w-10 h-10 rounded-xl flex items-center justify-center bg-mood-color-10">
-                  <Plane size={20} className="text-mood-color" />
-                </div>
-                <h1 className="text-xl font-bold text-mood-color">Trip Canvas Vibes</h1>
-              </div>
-              <button
-                className="shadow-neo-flat w-10 h-10 rounded-lg flex items-center justify-center text-mood-color"
-                onClick={toggleMobileMenu}
-                aria-label="Close menu"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="flex flex-col gap-6 py-4">
-              <a 
-                href="#features" 
-                className="text-xl text-neo-text hover:text-mood-color transition-colors py-2 border-b border-mood-color-10/20"
-                onClick={handleNavLinkClick}
-              >
-                Features
-              </a>
-              <a 
-                href="#about" 
-                className="text-xl text-neo-text hover:text-mood-color transition-colors py-2 border-b border-mood-color-10/20"
-                onClick={handleNavLinkClick}
-              >
-                About
-              </a>
-              <a 
-                href="#testimonials" 
-                className="text-xl text-neo-text hover:text-mood-color transition-colors py-2 border-b border-mood-color-10/20"
-                onClick={handleNavLinkClick}
-              >
-                Testimonials
-              </a>
-            </div>
-            
-            <div className="mt-auto">
-              <Link 
-                to="/app/trips" 
-                className="w-full neo-button bg-mood-color text-white font-medium flex items-center justify-center gap-2 py-3"
-                onClick={handleNavLinkClick}
-              >
-                Get Started <ArrowRight size={18} />
-              </Link>
-            </div>
-          </div>
-        </div>
+        {/* Using the shared Header component */}
+        <Header />
 
         {/* Hero Section with neomorphic layers */}
         <section className="py-10 sm:py-12 md:py-20 px-4 sm:px-6 md:px-8 max-w-7xl mx-auto relative">
@@ -457,7 +364,7 @@ const Landing = () => {
                 {[
                   { icon: Camera, label: "Photo Memories" },
                   { icon: Music, label: "Spotify Integration" },
-                  { icon: MapPin, label: "Location Marking" },
+                  { icon: Sticker, label: "Custom Stickers" },
                   { icon: Calendar, label: "Timeline View" }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-2 py-2 px-2 sm:px-3 rounded-lg bg-neo-bg shadow-neo-flat hover:shadow-neo-card transition-all duration-300">
@@ -597,22 +504,22 @@ const Landing = () => {
                 previewContent={<MusicPreview />}
               />
               <FeaturePreview 
-                icon={MapPin}
-                title="Location Marking"
-                description="Tag your memories with locations to create a visual map of your journey."
-                previewContent={<LocationPreview />}
-              />
-              <FeaturePreview 
                 icon={Camera}
                 title="Photo Memories"
                 description="Upload and arrange photos from your travels directly onto your memory board."
                 previewContent={<PhotoPreview />}
               />
               <FeaturePreview 
-                icon={Compass}
-                title="Journey Tracking"
-                description="Record your path and visualize the route of your adventure."
-                previewContent={<JourneyPreview />}
+                icon={Sticker}
+                title="Custom Stickers"
+                description="Decorate your travel memory board with emoji stickers and customizable labels."
+                previewContent={<StickerPreview />}
+              />
+              <FeaturePreview 
+                icon={Sparkles}
+                title="Beautiful UI"
+                description="Enjoy a modern neomorphic interface that makes organizing memories a delight."
+                previewContent={<MemoryBoardPreview />}
               />
             </div>
           </div>
@@ -648,15 +555,57 @@ const Landing = () => {
               <div className="shadow-neo-card rounded-2xl overflow-hidden bg-neo-bg p-4 sm:p-6">
                 {/* Nested layers for depth */}
                 <div className="rounded-xl bg-mood-color-10/20 p-3 sm:p-5 shadow-neo-mood-flat">
-                  <div className="rounded-lg overflow-hidden shadow-neo-flat">
-                    <img 
-                      src="/spotify-integration.png" 
-                      alt="Spotify Integration" 
-                      className="w-full h-auto"
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://via.placeholder.com/600x400?text=Spotify+Integration';
-                      }}
-                    />
+                  <div className="rounded-lg overflow-hidden shadow-neo-flat bg-black/5 h-[240px] sm:h-[280px] md:h-[320px] relative">
+                    {/* Dynamic Neomorphic Spotify Animation */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {/* Spotify Logo */}
+                      <div className="absolute w-20 h-20 sm:w-24 sm:h-24 bg-neo-bg rounded-full shadow-neo-card flex items-center justify-center z-10 animate-float-slow">
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14 text-[#1DB954]" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.48.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                        </svg>
+                      </div>
+                      
+                      {/* Profile/App Icon */}
+                      <div className="absolute -bottom-4 sm:-bottom-6 -right-6 sm:-right-8 w-16 h-16 sm:w-20 sm:h-20 bg-neo-bg rounded-full shadow-neo-card flex items-center justify-center animate-float">
+                        <Plane size={24} className="sm:text-[32px] text-mood-color" />
+                      </div>
+                      
+                      {/* Connection Lines */}
+                      <div className="absolute w-full h-full">
+                        {/* Pulsing connection line 1 */}
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-mood-color/50 to-transparent animate-gradient-shift" style={{ animationDuration: '3s' }}></div>
+                        
+                        {/* Pulsing connection line 2 */}
+                        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-mood-color/30 to-transparent animate-gradient-shift" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
+
+                        {/* Music Waves - sound visualizer style */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-1 sm:gap-2">
+                          {[...Array(5)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="w-1 sm:w-1.5 h-6 sm:h-8 bg-mood-color rounded-full"
+                              style={{
+                                animation: `waveAnimation ${1 + i * 0.2}s ease-in-out infinite`,
+                                animationDelay: `${i * 0.1}s`,
+                                opacity: 0.6 + (i * 0.08)
+                              }}
+                            ></div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Connecting Dots */}
+                      <div className="absolute top-1/3 left-1/4 w-2 h-2 sm:w-3 sm:h-3 bg-mood-color rounded-full animate-pulse-slow"></div>
+                      <div className="absolute bottom-1/3 right-1/4 w-2 h-2 sm:w-3 sm:h-3 bg-mood-color rounded-full animate-pulse-slow" style={{ animationDelay: '0.5s' }}></div>
+                      
+                      {/* Status Text - Connected */}
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-neo-bg shadow-neo-card rounded-full">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-[#1DB954] animate-pulse-slow"></div>
+                          <span className="text-xs sm:text-sm font-medium">Connected to Spotify</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Spotify controls - neomorphic style */}

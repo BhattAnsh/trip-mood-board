@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTrip } from '../hooks/use-trip';
 import TimeSlider from '../components/TimeSlider';
+import TimeSliderMobile from '../components/TimeSliderMobile';
 import StickerLibrary from '../components/StickerLibrary';
 import MemoryCanvas from '../components/MemoryCanvas';
 import SpotifyPlayer from '../components/SpotifyPlayer';
@@ -17,6 +18,7 @@ import {
 import { MapPin, Plane, Compass, Camera, PanelLeftClose, PlusCircle, ChevronLeft, ChevronRight, Music, RotateCcw } from 'lucide-react';
 import Header from "../components/Header";
 import { MobileMessage } from "../components/ResponsiveMessage";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "../components/ui/resizable";
 
 const TripDashboard = ({ 
   toggleRightPanel, 
@@ -89,53 +91,130 @@ const RightPanel = ({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => voi
 
 const BottomPanel = ({ isOpen, onToggle }: { isOpen: boolean, onToggle: () => void }) => {
   const [isTripRadioVisible, setIsTripRadioVisible] = useState(true);
+  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+  
+  // Update viewport width on resize
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
+  // Calculate appropriate panel size based on viewport with better clamping values
+  const getPanelHeight = () => {
+    if (viewportWidth < 640) { // Small mobile
+      return 'clamp(170px, 45vh, 240px)';  // Increased minimum for better interaction
+    } else if (viewportWidth < 768) { // Mobile/small tablet
+      return 'clamp(180px, 40vh, 300px)';  // Better minimum height for usability
+    } else if (viewportWidth < 1024) { // Tablet/small desktop
+      return 'clamp(200px, 35vh, 340px)';  // Improved for tablets
+    } else {
+      return 'clamp(220px, 30vh, 420px)'; // Desktop
+    }
+  };
   
   // Check if the trip radio element exists
   useEffect(() => {
     const checkTripRadioElement = () => {
-      // Look for elements that might contain the Trip Radio text
       const elements = document.querySelectorAll('.text-mood-color');
       let found = false;
-      
       elements.forEach(element => {
         if (element.textContent?.includes('Trip Radio')) {
           found = true;
         }
       });
-      
       setIsTripRadioVisible(found);
     };
     
     checkTripRadioElement();
-    // Re-check when the panel is opened
     if (isOpen) {
       setTimeout(checkTripRadioElement, 100);
     }
   }, [isOpen]);
   
+  // Determine panel size ratio based on screen size
+  const getTimePanelSize = () => {
+    return viewportWidth < 640 ? 60 : viewportWidth < 768 ? 65 : 75;
+  };
+  
+  const getSpotifyPanelSize = () => {
+    return viewportWidth < 640 ? 40 : viewportWidth < 768 ? 35 : 25;
+  };
+  
   return (
     <div 
-      className={`fixed bottom-0 left-0 right-0 z-20 bg-white/90 backdrop-blur-md transition-all duration-300 ease-out transform bottom-panel ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
+      className={`
+        fixed bottom-0 left-0 right-0 z-20 
+        bg-white/90 backdrop-blur-md 
+        transition-all duration-300 ease-out transform
+        ${isOpen ? 'translate-y-0' : 'translate-y-full'}
+        border-t border-white/30
+        shadow-lg
+        bottom-panel
+        overflow-hidden
+      `}
       style={{ 
-        height: isOpen ? 'clamp(300px, 50vh, 500px)' : '0', // Responsive height: 50vh on small screens, with min/max constraints
         boxShadow: isOpen ? '0 -4px 20px rgba(0,0,0,0.15)' : 'none',
-        borderTop: '1px solid rgba(255,255,255,0.3)'
+        height: getPanelHeight(),
       }}
     >
-      <div className="grid grid-cols-[3fr_1fr] gap-4 p-4 h-full text-sm md:text-base">
-        {/* Timeline with responsive text via tailwind classes */}
-        <div className="overflow-hidden shadow-neo-flat rounded-xl bg-white/50">
-          <div className="text-sm md:text-base">
-            <TimeSlider />
+      <div className="relative w-full h-full flex flex-col">
+        {/* Interactive drag handle with better touch area for mobile */}
+        <div 
+          className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-3 z-20 cursor-pointer touch-manipulation"
+          onClick={onToggle}
+          style={{ touchAction: 'none' }}
+        >
+          <div className="w-20 h-6 bg-white/80 rounded-t-lg border-t border-l border-r border-white/30 flex items-center justify-center">
+            <div className="w-10 h-1.5 bg-mood-color/30 rounded-full"></div>
           </div>
         </div>
-        
-        {/* Spotify Player with responsive text via tailwind classes */}
-        <div className="overflow-hidden shadow-neo-flat rounded-xl bg-white/50">
-          <div className="text-sm md:text-base">
-            <SpotifyPlayer />
-          </div>
-        </div>
+
+        <ResizablePanelGroup
+          direction="horizontal"
+          className="h-full rounded-t-xl overflow-hidden"
+        >
+          <ResizablePanel 
+            defaultSize={getTimePanelSize()} 
+            minSize={viewportWidth < 640 ? 45 : viewportWidth < 768 ? 40 : 30}
+            className="h-full"
+          >
+            <div className="h-full p-1 sm:p-2 md:p-3 lg:p-4">
+              <div className="h-full shadow-neo-flat rounded-lg sm:rounded-xl bg-white/50 overflow-hidden">
+                {/* Conditionally render different TimeSlider components based on screen size */}
+                <div className="xs:block sm:hidden h-full">
+                  <TimeSliderMobile />
+                </div>
+                <div className="xs:hidden h-full">
+                  <TimeSlider />
+                </div>
+              </div>
+            </div>
+          </ResizablePanel>
+          
+          <ResizableHandle 
+            withHandle 
+            className="bg-mood-color/10 hover:bg-mood-color/20 transition-colors w-1 xs:w-2 sm:w-1 touch-manipulation"
+            style={{ touchAction: 'none' }}
+          />
+          
+          <ResizablePanel 
+            defaultSize={getSpotifyPanelSize()} 
+            minSize={viewportWidth < 640 ? 25 : viewportWidth < 768 ? 30 : 20}
+            className="h-full"
+          >
+            <div className="h-full p-1 sm:p-2 md:p-3 lg:p-4">
+              <div className="h-full shadow-neo-flat rounded-lg sm:rounded-xl bg-white/50 overflow-hidden">
+                <SpotifyPlayer />
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );

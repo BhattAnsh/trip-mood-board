@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import SpotifyCallback from "./components/SpotifyCallback";
 import Trips from "./pages/Trips";
+import Settings from "./pages/Settings";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { TripProvider } from "./contexts/TripProvider";
 
@@ -26,6 +27,7 @@ const App = () => (
               {/* Main App Routes */}
               <Route path="/app" element={<Index />} />
               <Route path="/app/trips" element={<Trips />} />
+              <Route path="/settings" element={<Settings />} />
               {/* For backward compatibility, redirect /trips to /app/trips */}
               <Route path="/trips" element={<Navigate to="/app/trips" replace />} />
               <Route path="/spotify-callback" element={<SpotifyCallback />} />

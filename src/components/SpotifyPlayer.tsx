@@ -1,9 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { useTrip } from '../hooks/use-trip';
 import { useTheme } from '../hooks/use-theme';
-import { Music, SkipForward, SkipBack, Play, Pause, Volume2, VolumeX, ExternalLink } from 'lucide-react';
+import { Music, SkipForward, SkipBack, Play, Pause, Volume2, VolumeX, ExternalLink, ChevronLeft } from 'lucide-react';
 import SpotifyWebApi from 'spotify-web-api-js';
+import { useNavigate } from 'react-router-dom';
 // Import the Player type from our declaration file
 import type { SpotifyPlayer } from '../types/spotify';
+import SpotifyPlayerMobile from './SpotifyPlayerMobile';
 
 // Define interfaces for Spotify auth and track data
 interface SpotifyAuth {
@@ -135,6 +138,8 @@ const DEMO_TRACKS = [
 ];
 
 const SpotifyPlayer: React.FC = () => {
+  const { currentTrip } = useTrip();
+  const navigate = useNavigate();
   const [spotifyAuth, setSpotifyAuth] = useState<SpotifyAuth>({
     accessToken: null,
     expiresAt: null,
@@ -155,8 +160,9 @@ const SpotifyPlayer: React.FC = () => {
   const [trackProgress, setTrackProgress] = useState(0);
   const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
   
-  const spotifyApi = new SpotifyWebApi();
-  
+  // Add useMemo to improve performance and fix dependency issues
+  const spotifyApi = React.useMemo(() => new SpotifyWebApi(), []);
+
   // Debug log to check if the client ID is being loaded
   useEffect(() => {
     console.log('Spotify Client ID check:', 
@@ -175,10 +181,7 @@ const SpotifyPlayer: React.FC = () => {
   // Progress tracking effect - start the interval when playing, clear it when paused
   useEffect(() => {
     if (isDemoMode && !isPaused && currentTrack) {
-      // Reset progress to 0 for new tracks
-      if (progressInterval === null) {
-        setTrackProgress(0);
-      }
+      // Skip setTrackProgress(0) here to avoid causing re-renders
       
       // Clear any existing interval
       if (progressInterval) {
@@ -198,7 +201,7 @@ const SpotifyPlayer: React.FC = () => {
               const nextIndex = (demoTrackIndex + 1) % DEMO_TRACKS.length;
               setDemoTrackIndex(nextIndex);
               setCurrentTrack(DEMO_TRACKS[nextIndex]);
-              setTrackProgress(0);
+              // Don't reset track progress here, we'll handle it in the reset effect
             }, 250);
             
             return currentTrack.duration_ms; // Keep at 100% until track changes
@@ -221,9 +224,11 @@ const SpotifyPlayer: React.FC = () => {
   // Reset progress when changing tracks
   useEffect(() => {
     if (currentTrack) {
+      // Only reset track progress when the track changes
+      // We use the currentTrack.id to detect track changes
       setTrackProgress(0);
     }
-  }, [demoTrackIndex, currentTrack?.id]);
+  }, [currentTrack?.id]);
   
   // Initialize Spotify Web Playback SDK or Demo Mode
   useEffect(() => {
@@ -268,6 +273,8 @@ const SpotifyPlayer: React.FC = () => {
     }
     
     setIsLoading(false);
+    // We're intentionally not including dependencies here as this should only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Add a refresh token function
@@ -318,28 +325,10 @@ const SpotifyPlayer: React.FC = () => {
     }
   };
   
-  const initializePlayer = useCallback((token: string) => {
-    // Skip actual Spotify SDK initialization if in demo mode
-    if (isDemoMode) return;
-    
-    if (!window.Spotify) {
-      // Load Spotify Player script if not already loaded
-      const script = document.createElement('script');
-      script.src = 'https://sdk.scdn.co/spotify-player.js';
-      script.async = true;
-      document.body.appendChild(script);
-      
-      window.onSpotifyWebPlaybackSDKReady = () => {
-        createPlayer(token);
-      };
-    } else {
-      createPlayer(token);
-    }
-  }, [isDemoMode]);
-  
-  const createPlayer = useCallback((token: string) => {
+  // Helper function to create and configure the Spotify player
+  const createAndConfigurePlayer = (token: string) => {
     // Skip player creation if in demo mode
-    if (isDemoMode) return;
+    if (isDemoMode) return null;
     
     const player = new window.Spotify.Player({
       name: 'Trip Canvas Radio',
@@ -375,7 +364,28 @@ const SpotifyPlayer: React.FC = () => {
     
     player.connect();
     setPlayer(player as SpotifyPlayer);
-  }, [spotifyApi, isDemoMode]);
+    return player;
+  };
+  
+  const initializePlayer = useCallback((token: string) => {
+    // Skip actual Spotify SDK initialization if in demo mode
+    if (isDemoMode) return;
+    
+    if (!window.Spotify) {
+      // Load Spotify Player script if not already loaded
+      const script = document.createElement('script');
+      script.src = 'https://sdk.scdn.co/spotify-player.js';
+      script.async = true;
+      document.body.appendChild(script);
+      
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        createAndConfigurePlayer(token);
+      };
+    } else {
+      createAndConfigurePlayer(token);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDemoMode]);
   
   const handleLogin = () => {
     // For demonstration purposes with two options:
@@ -608,25 +618,25 @@ const SpotifyPlayer: React.FC = () => {
   // Render login button if not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="w-full h-full p-2 relative">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-base font-semibold flex items-center gap-1 text-mood-color">
+      <div className="w-full h-full p-2 sm:p-3 relative">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold flex items-center gap-1.5 text-mood-color">
             <Music size={16} className="opacity-80" />
             <span>Trip Soundtrack</span>
           </h2>
           
           <button
             onClick={handleLogin}
-            className="py-1 px-3 text-sm rounded-full bg-mood-color text-white hover:opacity-90 transition-opacity"
+            className="py-1.5 px-4 text-sm rounded-full bg-mood-color text-white hover:opacity-90 transition-opacity shadow-neo-btn"
           >
             Connect Spotify
           </button>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center mt-2">
           {/* Album art or placeholder */}
-          <div className="w-14 h-14 rounded-md overflow-hidden flex-shrink-0 mr-3">
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 mr-3 shadow-neo-card">
+            <div className="w-full h-full bg-neo-bg flex items-center justify-center">
               <Music size={24} className="text-gray-400" />
             </div>
           </div>
@@ -634,7 +644,7 @@ const SpotifyPlayer: React.FC = () => {
           {/* Track info and controls */}
           <div className="flex-1 min-w-0">
             <div className="h-full flex flex-col justify-center">
-              <p className="text-mood-color font-medium">Connect your Spotify account</p>
+              <p className="text-mood-color font-medium mb-1">Connect your Spotify account</p>
               <p className="text-xs opacity-80">Add a soundtrack to your travel memories</p>
             </div>
           </div>
@@ -644,26 +654,59 @@ const SpotifyPlayer: React.FC = () => {
   }
   
   return (
-    <div className="w-full h-full p-3 relative">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-base font-semibold flex items-center gap-1 text-mood-color">
+    <div className="w-full h-full p-2 sm:p-3 relative flex flex-col">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm sm:text-base font-semibold flex items-center gap-1.5 text-mood-color">
           <Music size={16} className="opacity-80" />
-          <span>Trip Soundtrack</span>
+          <span className="sm:inline xs:hidden">Trip Soundtrack</span>
+          <span className="xs:inline sm:hidden">Soundtrack</span>
         </h2>
         
-        <div className="text-xs flex items-center gap-1 bg-neo-bg shadow-neo-inset px-2 py-0.5 rounded-full">
-          {isDemoMode && (
-            <>
-              <span className="animate-pulse bg-mood-color h-1.5 w-1.5 rounded-full opacity-80"></span>
-              <span className="text-mood-color opacity-80">Demo Mode</span>
-            </>
-          )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/app/trips')}
+            className="p-1 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
+            aria-label="Back to trips"
+            title="Back to trips"
+          >
+            <ChevronLeft size={15} className="sm:w-4 sm:h-4" />
+          </button>
+          
+          <div className="text-[10px] flex items-center gap-1 bg-neo-bg shadow-neo-inset px-1.5 py-0.5 rounded-full">
+            {isDemoMode && (
+              <>
+                <span className="animate-pulse bg-mood-color h-1.5 w-1.5 rounded-full opacity-80"></span>
+                <span className="text-mood-color opacity-80">Demo</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center">
+      {/* Responsive layout - show different UI based on screen size */}
+      <div className="hidden xs:flex sm:hidden items-center justify-center flex-1 min-h-0">
+        {/* Mobile/XS layout - use the mobile player component */}
+        <div className="w-full h-full overflow-hidden flex items-center">
+          <SpotifyPlayerMobile
+            currentTrack={currentTrack}
+            isPaused={isPaused}
+            isActive={isActive}
+            progress={trackProgress}
+            duration={currentTrack?.duration_ms}
+            onTogglePlay={togglePlay}
+            onSkipNext={skipNext}
+            onSkipPrevious={skipPrevious}
+            onToggleMute={toggleMute}
+            isMuted={isMuted}
+            onProgressChange={setTrackProgress}
+          />
+        </div>
+      </div>
+
+      {/* Standard layout for larger screens */}
+      <div className="xs:hidden flex items-center flex-1 min-h-0">
         {/* Album art or placeholder with neomorphic styling */}
-        <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 mr-3 shadow-neo-card">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden flex-shrink-0 mr-2 sm:mr-3 shadow-neo-card">
           {currentTrack?.album?.images?.[0]?.url ? (
             <img
               src={currentTrack.album.images[0].url}
@@ -672,15 +715,15 @@ const SpotifyPlayer: React.FC = () => {
             />
           ) : (
             <div className="w-full h-full bg-neo-bg flex items-center justify-center">
-              <Music size={24} className="text-gray-400" />
+              <Music size={20} className="text-gray-400" />
             </div>
           )}
         </div>
 
         {/* Track info and controls */}
-        <div className="flex-1 min-w-0">
-          <div className="mb-1 overflow-hidden">
-            <p className="font-medium truncate text-mood-color">
+        <div className="flex-1 min-w-0 flex flex-col justify-center h-full">
+          <div className="mb-2 overflow-hidden">
+            <p className="font-medium truncate text-mood-color text-sm">
               {currentTrack?.name || "No track playing"}
             </p>
             <p className="text-xs truncate opacity-80">
@@ -692,7 +735,7 @@ const SpotifyPlayer: React.FC = () => {
           <div className="mb-2 relative">
             {/* Neomorphic container for the progress bar */}
             <div 
-              className="h-2 w-full bg-neo-bg rounded-full overflow-hidden shadow-inner cursor-pointer relative group"
+              className="h-1.5 sm:h-2 w-full bg-neo-bg rounded-full overflow-hidden shadow-inner cursor-pointer relative group"
               onClick={handleProgressBarClick}
             >
               {/* Progress fill */}
@@ -706,7 +749,7 @@ const SpotifyPlayer: React.FC = () => {
               
               {/* Hover dot for better visual feedback */}
               <div 
-                className="w-3 h-3 rounded-full bg-mood-color absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-neo-card"
+                className="w-2.5 h-2.5 rounded-full bg-mood-color absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity shadow-neo-card"
                 style={{ 
                   left: `calc(${getProgressPercentage()}% - 6px)`,
                   display: getProgressPercentage() > 0 ? 'block' : 'none'
@@ -715,49 +758,49 @@ const SpotifyPlayer: React.FC = () => {
             </div>
             
             {/* Time indicators */}
-            <div className="flex justify-between text-xs opacity-60 mt-1">
+            <div className="flex justify-between text-[9px] sm:text-xs opacity-60 mt-1">
               <span>{formatTime(trackProgress)}</span>
               <span>{currentTrack ? formatTime(currentTrack.duration_ms) : '0:00'}</span>
             </div>
           </div>
 
-          {/* Player controls with neomorphic styling */}
-          <div className="flex items-center justify-between">
+          {/* Player controls with neomorphic styling - auto-adjusting size */}
+          <div className="flex items-center justify-between mt-1">
             <div className="flex items-center">
               <button
                 onClick={skipPrevious}
-                className="p-1.5 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
+                className="p-1 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
                 disabled={!isActive}
                 aria-label="Previous track"
               >
-                <SkipBack size={15} />
+                <SkipBack size={13} className="sm:w-4 sm:h-4" />
               </button>
               
               <button
                 onClick={togglePlay}
-                className="p-1.5 mx-2 w-8 h-8 rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed bg-neo-bg text-mood-color flex items-center justify-center"
+                className="p-1.5 mx-2 sm:mx-3 w-7 h-7 sm:w-9 sm:h-9 rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed bg-neo-bg text-mood-color flex items-center justify-center"
                 disabled={!isActive}
                 aria-label={isPaused ? "Play" : "Pause"}
               >
-                {isPaused ? <Play size={15} /> : <Pause size={15} />}
+                {isPaused ? <Play size={14} className="sm:w-5 sm:h-5" /> : <Pause size={14} className="sm:w-5 sm:h-5" />}
               </button>
               
               <button
                 onClick={skipNext}
-                className="p-1.5 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
+                className="p-1 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
                 disabled={!isActive}
                 aria-label="Next track"
               >
-                <SkipForward size={15} />
+                <SkipForward size={13} className="sm:w-4 sm:h-4" />
               </button>
             </div>
             
             <button
               onClick={toggleMute}
-              className="p-1.5 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
+              className="p-1 text-mood-color hover:opacity-80 transition-opacity rounded-full shadow-neo-btn hover:shadow-neo-btn-hover active:shadow-neo-btn-pressed"
               aria-label={isMuted ? "Unmute" : "Mute"}
             >
-              {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+              {isMuted ? <VolumeX size={13} className="sm:w-4 sm:h-4" /> : <Volume2 size={13} className="sm:w-4 sm:h-4" />}
             </button>
           </div>
         </div>
@@ -766,4 +809,4 @@ const SpotifyPlayer: React.FC = () => {
   );
 };
 
-export default SpotifyPlayer; 
+export default SpotifyPlayer;
