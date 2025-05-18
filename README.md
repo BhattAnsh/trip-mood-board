@@ -101,10 +101,7 @@ Visit `http://localhost:5173` to see the app in action.
 - Advanced photo editing tools
 
 ## 👥 Team Members
-
-- [Developer 1] - Frontend & UI Design
-- [Developer 2] - Backend & Integration
-- [Developer 3] - UX Design & Animation
+Ansh Bhatt - Portfolio[www.anshbhatt.tech]
 
 
 ## 📝 License
