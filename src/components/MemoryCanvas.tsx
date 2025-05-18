@@ -2,10 +2,20 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useTrip } from '../hooks/use-trip';
 import { Sticker } from '../types';
 import { useTheme } from '../hooks/use-theme';
-import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader } from 'lucide-react';
+import { Trash2, Move, Maximize, ImageIcon, ZoomIn, ZoomOut, RefreshCw, MapPin, Map as MapIcon, Edit, Check, X, Download, Loader, PlusCircle, Music, ChevronRight } from 'lucide-react';
 import { toPng } from 'html-to-image';
 
-const MemoryCanvas = () => {
+const MemoryCanvas = ({ 
+  toggleRightPanel, 
+  toggleBottomPanel,
+  isRightPanelOpen,
+  isBottomPanelOpen
+}: { 
+  toggleRightPanel?: () => void, 
+  toggleBottomPanel?: () => void,
+  isRightPanelOpen?: boolean,
+  isBottomPanelOpen?: boolean
+} = {}) => {
   const { 
     currentTrip, 
     currentDay, 
@@ -312,9 +322,22 @@ const MemoryCanvas = () => {
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
-    // Only deselect if clicking directly on canvas, not on a sticker
-    if (e.target === canvasRef.current) {
+    // Only deselect if clicking directly on canvas or canvas children, but not on specific interactive elements
+    const target = e.target as HTMLElement;
+    const isButton = target.tagName === 'BUTTON' || target.closest('button');
+    const isInput = target.tagName === 'INPUT' || target.closest('input');
+    const isActiveSticker = target.closest('.memory-sticker, .emoji-sticker, .polaroid');
+    
+    if (!isButton && !isInput && !isActiveSticker) {
       setActiveStickerID(null);
+      
+      // Close panels when clicking on the canvas area
+      if (isRightPanelOpen && toggleRightPanel) {
+        toggleRightPanel();
+      }
+      if (isBottomPanelOpen && toggleBottomPanel) {
+        toggleBottomPanel();
+      }
     }
   };
 
@@ -394,6 +417,13 @@ const MemoryCanvas = () => {
     return `${fontClass} ${rotationClass}`;
   };
 
+  // Add a function to get improved shadow style based on rotation
+  const getStickerShadow = (rotation: number) => {
+    // Direction-aware shadow - shadow opposite to the rotation direction
+    const shadowDirection = rotation > 0 ? '-3px 4px' : '3px 4px';
+    return `${shadowDirection} 8px rgba(0,0,0,0.15)`;
+  };
+
   const renderSticker = (sticker: Sticker) => {
     const isActive = sticker.id === activeStickerID;
     
@@ -422,7 +452,7 @@ const MemoryCanvas = () => {
       cursor: isDragging ? 'grabbing' : 'grab',
       transform: `rotate(${rotation}deg)`,
       transformOrigin: 'center center',
-      boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+      boxShadow: getStickerShadow(rotation),
     };
     
     // Special case for MAP_OUTLINE
@@ -462,11 +492,13 @@ const MemoryCanvas = () => {
         return (
           <div
             key={sticker.id}
-            className="emoji-sticker flex items-center justify-center rounded-full transition-all duration-200"
+            className="emoji-sticker flex items-center justify-center rounded-full transition-all duration-200 hover:scale-105"
             style={{
               ...stickerStyle,
               background: 'transparent',
-              boxShadow: 'none',
+              // No box shadow for emoji, but add a transform effect on hover
+              transform: `rotate(${rotation}deg)`,
+              transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
             }}
             onClick={() => handleStickerClick(sticker.id)}
             onMouseDown={(e) => handleDragStart(e, sticker)}
@@ -476,7 +508,7 @@ const MemoryCanvas = () => {
               style={{ 
                 fontSize: `${Math.max(sticker.size.width, sticker.size.height) * 0.6}px`, 
                 lineHeight: 1,
-                filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.2))',
+                filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.25))',
                 transform: 'scale(1.1)',
               }}
             >
@@ -495,22 +527,31 @@ const MemoryCanvas = () => {
               ...stickerStyle,
               padding: '10px 10px 30px 10px',
               backgroundColor: 'white',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+              boxShadow: getStickerShadow(rotation),
               border: 'none',
             }}
             onClick={() => handleStickerClick(sticker.id)}
             onMouseDown={(e) => handleDragStart(e, sticker)}
           >
-            {/* Tape elements for polaroid effect */}
-            <div className="tape tape-left" />
-            <div className="tape tape-right" />
+            {/* Enhanced tape elements with better shadows */}
+            <div className="tape tape-left" style={{ 
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              background: 'linear-gradient(45deg, rgba(255,255,255,0.8), rgba(255,255,255,0.95))'
+            }} />
+            <div className="tape tape-right" style={{ 
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+              background: 'linear-gradient(-45deg, rgba(255,255,255,0.8), rgba(255,255,255,0.95))'
+            }} />
             
             <img
               src={sticker.content}
               alt="Memory sticker"
-              className="select-none w-full h-full object-cover"
+              className="select-none w-full h-full object-cover rounded-lg"
               draggable={false}
-              style={{ maxHeight: 'calc(100% - 30px)' }}
+              style={{ 
+                maxHeight: 'calc(100% - 30px)',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
+              }}
             />
             {isActive && renderStickerControls(sticker)}
           </div>
@@ -544,7 +585,7 @@ const MemoryCanvas = () => {
               padding: '12px',
               borderRadius: '2px',
               border: 'none',
-              boxShadow: 'none',
+              boxShadow: getStickerShadow(rotation),
               cursor: isDragging ? 'grabbing' : 'text',
             }}
             onClick={() => handleStickerClick(sticker.id)}
@@ -553,7 +594,18 @@ const MemoryCanvas = () => {
           >
             <div 
               className="pushpin"
-              style={{ backgroundColor: getMoodColorHex(currentTrip?.moodColor || 'blue') }}
+              style={{ 
+                backgroundColor: getMoodColorHex(currentTrip?.moodColor || 'blue'),
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                height: '10px',
+                width: '10px',
+                borderRadius: '50%',
+                position: 'absolute',
+                top: '5px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 2
+              }}
             />
             
             <p 
@@ -562,7 +614,8 @@ const MemoryCanvas = () => {
                 textDecoration: sticker.content.includes('✓') ? 'line-through' : 'none',
                 // Slightly randomize text size for more organic look
                 fontSize: `${0.9 + (sticker.id.charCodeAt(1) % 3) * 0.1}rem`,
-                color: 'rgba(0, 0, 0, 0.8)'
+                color: 'rgba(0, 0, 0, 0.8)',
+                marginTop: '6px'
               }}
             >
               {sticker.content}
@@ -586,8 +639,9 @@ const MemoryCanvas = () => {
                 size={15} 
                 strokeWidth={1.5} 
                 style={{ color: getMoodColorHex(currentTrip?.moodColor || 'blue') }} 
+                className="group-hover:text-white transition-colors"
               />
-              <span className="absolute -top-8 bg-black text-white text-xs py-1 px-2 rounded opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none whitespace-nowrap">
+              <span className="absolute -top-8 bg-black text-white text-xs py-1 px-2 rounded opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none whitespace-nowrap shadow-md">
                 Edit Text
               </span>
             </div>
@@ -605,7 +659,7 @@ const MemoryCanvas = () => {
       <>
         {/* Resize handle */}
         <div
-          className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize z-20 rounded-br-lg flex items-center justify-center bg-white bg-opacity-80 shadow-sm"
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize z-20 rounded-br-lg flex items-center justify-center bg-white bg-opacity-90 shadow-md"
           onMouseDown={(e) => handleResizeStart(e, sticker)}
         >
           <Maximize size={14} className="text-mood-color" />
@@ -613,7 +667,7 @@ const MemoryCanvas = () => {
         
         {/* Delete button */}
         <button
-          className="absolute top-0 right-0 bg-white hover:bg-red-50 p-1 rounded-full transform translate-x-1/2 -translate-y-1/2 shadow-md text-red-500 border border-red-200"
+          className="absolute top-0 right-0 bg-white hover:bg-red-50 p-1.5 rounded-full transform translate-x-1/2 -translate-y-1/2 shadow-md text-red-500 border border-red-200 hover:scale-110 transition-transform"
           onClick={(e) => {
             e.stopPropagation();
             deleteSticker(sticker.id);
@@ -623,7 +677,7 @@ const MemoryCanvas = () => {
         </button>
         
         {/* Drag indicator */}
-        <div className="absolute top-0 left-0 transform -translate-x-1/2 -translate-y-1/2 bg-white p-1 rounded-full shadow-md">
+        <div className="absolute top-0 left-0 transform -translate-x-1/2 -translate-y-1/2 bg-white p-1.5 rounded-full shadow-md">
           <Move size={14} className="text-mood-color" />
         </div>
       </>
@@ -1279,25 +1333,172 @@ const MemoryCanvas = () => {
     }
   };
 
+  // Wooden frame texture CSS
+  const woodTexture = {
+    backgroundImage: `
+      repeating-linear-gradient(
+        45deg,
+        rgba(139, 90, 43, 0.8) 0px,
+        rgba(160, 82, 45, 0.85) 5px,
+        rgba(205, 133, 63, 0.9) 10px,
+        rgba(160, 82, 45, 0.85) 15px,
+        rgba(139, 90, 43, 0.8) 20px
+      )
+    `,
+    boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 0, 0, 0.4)',
+  };
+
   return (
     <div 
-      className="relative w-full h-full overflow-hidden rounded-lg transition-all duration-200 cork-board"
-      style={{ zIndex: 0 }}
+      className="relative w-full h-full overflow-hidden transition-all duration-200"
+      style={{ 
+        zIndex: 0,
+        borderRadius: 0, // Remove rounded corners for full-screen display
+      }}
     >
-      {/* Title Header */}
-      {stickers.length > 0 && currentTrip && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-          <div className="memory-board-header">
-            <h3 className="text-lg font-bold text-mood-color">
-              {currentTrip.title || "New Trip"} - Day {currentDay + 1}
-            </h3>
-          </div>
-        </div>
+      {/* Panel overlay for click-away closing */}
+      {(isRightPanelOpen || isBottomPanelOpen) && (
+        <div 
+          className="absolute inset-0 z-10 bg-transparent"
+          onClick={(e) => {
+            e.stopPropagation();
+            
+            // Close panels when clicking the overlay
+            if (isRightPanelOpen && toggleRightPanel) {
+              toggleRightPanel();
+            }
+            if (isBottomPanelOpen && toggleBottomPanel) {
+              toggleBottomPanel();
+            }
+          }}
+        />
       )}
-    
+      
+      {/* Main canvas with cork texture */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4a76a' fill-opacity='0.12' fill-rule='evenodd'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='24' cy='24' r='1'/%3E%3Ccircle cx='36' cy='36' r='1'/%3E%3Ccircle cx='48' cy='48' r='1'/%3E%3Ccircle cx='60' cy='60' r='1'/%3E%3Ccircle cx='72' cy='72' r='1'/%3E%3Ccircle cx='84' cy='84' r='1'/%3E%3Ccircle cx='96' cy='96' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundColor: '#d8b78e',
+          backgroundBlendMode: 'soft-light',
+          boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.2)'
+        }}
+      />
+      
+      {/* Top wooden frame */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-[20px] pointer-events-none"
+        style={woodTexture}
+      />
+      
+      {/* Bottom wooden frame */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-[20px] pointer-events-none"
+        style={woodTexture}
+      />
+      
+      {/* Left wooden frame */}
+      <div 
+        className="absolute top-[20px] left-0 bottom-[20px] w-[20px] pointer-events-none"
+        style={woodTexture}
+      />
+      
+      {/* Right wooden frame */}
+      <div 
+        className="absolute top-[20px] right-0 bottom-[20px] w-[20px] pointer-events-none"
+        style={woodTexture}
+      />
+      
+      {/* Corner nails */}
+      <div className="absolute top-[8px] left-[8px] w-4 h-4 rounded-full bg-[#A0A0A0] shadow-inner border-2 border-[#707070] z-20" style={{ boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.3)' }} />
+      <div className="absolute top-[8px] right-[8px] w-4 h-4 rounded-full bg-[#A0A0A0] shadow-inner border-2 border-[#707070] z-20" style={{ boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.3)' }} />
+      <div className="absolute bottom-[8px] left-[8px] w-4 h-4 rounded-full bg-[#A0A0A0] shadow-inner border-2 border-[#707070] z-20" style={{ boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.3)' }} />
+      <div className="absolute bottom-[8px] right-[8px] w-4 h-4 rounded-full bg-[#A0A0A0] shadow-inner border-2 border-[#707070] z-20" style={{ boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.3)' }} />
+      
+      {/* New Bottom Control Bar */}
+      <div className="absolute bottom-[30px] left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (toggleBottomPanel) toggleBottomPanel();
+          }}
+          className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md hover:bg-gray-100 transition-all duration-200 border border-white/30 flex items-center space-x-2"
+          title={isBottomPanelOpen ? "Close Bottom Bar" : "Open Bottom Bar"}
+        >
+          <Music size={18} className="text-mood-color" />
+          <span className="text-sm text-mood-color">Bottom Bar</span>
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            if (toggleRightPanel) toggleRightPanel();
+          }}
+          className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md hover:bg-gray-100 transition-all duration-200 border border-white/30 flex items-center space-x-2"
+          title={isRightPanelOpen ? "Close Right Side Bar" : "Open Right Side Bar"}
+        >
+          <PlusCircle size={18} className="text-mood-color" />
+          <span className="text-sm text-mood-color">Right Side Bar</span>
+        </button>
+      </div>
+      
+      {/* Canvas zoom controls - top right, avoiding overlap */}
+      <div className="absolute top-[35px] right-[35px] z-30">
+        <div className="flex items-center gap-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-md py-1 px-2">
+          <button
+            onClick={handleZoomOut}
+            className="text-mood-color p-1 rounded-md hover:bg-mood-color/10 transition-colors"
+            aria-label="Zoom out"
+            title="Zoom out"
+            disabled={isExporting}
+          >
+            <ZoomOut size={16} />
+          </button>
+          
+          <span className="text-xs text-neo-text font-medium">{Math.round(scale * 100)}%</span>
+          
+          <button
+            onClick={handleZoomIn}
+            className="text-mood-color p-1 rounded-md hover:bg-mood-color/10 transition-colors"
+            aria-label="Zoom in"
+            title="Zoom in"
+            disabled={isExporting}
+          >
+            <ZoomIn size={16} />
+          </button>
+          
+          <div className="w-px h-4 bg-gray-300/70 mx-0.5"></div>
+          
+          <button
+            onClick={handleResetZoom}
+            className="text-mood-color p-1 rounded-md hover:bg-mood-color/10 transition-colors"
+            aria-label="Reset view"
+            title="Reset view"
+            disabled={isExporting}
+          >
+            <RefreshCw size={16} />
+          </button>
+          
+          <div className="w-px h-4 bg-gray-300/70 mx-0.5"></div>
+          
+          <button
+            onClick={handleExportImage}
+            className="text-mood-color p-1 rounded-md hover:bg-mood-color/10 transition-colors"
+            aria-label="Export as image"
+            title="Export as image"
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <Loader size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+          </button>
+        </div>
+      </div>
+      
       <div
         ref={canvasRef}
-        className="absolute inset-0 focus:outline-none"
+        className="absolute inset-[20px] focus:outline-none"
         tabIndex={0}
         onMouseDown={handleCanvasPanStart}
         onMouseUp={handleMouseUp}
@@ -1310,12 +1511,12 @@ const MemoryCanvas = () => {
           cursor: isPanning ? 'grabbing' : 'default',
           zIndex: 1,
           filter: editingStickerID ? 'blur(3px)' : 'none',
-          transition: 'filter 0.3s ease'
+          transition: 'filter 0.3s ease',
         }}
       >
         {/* Render the canvas content with transformation */}
         <div
-          className="absolute"
+          className="absolute inset-0"
           style={{
             transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
             transformOrigin: '0 0',
@@ -1329,48 +1530,6 @@ const MemoryCanvas = () => {
               {stickers.map(sticker => renderSticker(sticker))}
             </>
           )}
-        </div>
-
-        {/* Updated controls with export button */}
-        <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10 bg-white bg-opacity-80 rounded-lg p-1.5 shadow-md">
-          <button
-            onClick={handleZoomOut}
-            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
-            aria-label="Zoom out"
-            disabled={isExporting}
-          >
-            <ZoomOut size={18} />
-          </button>
-          <button
-            onClick={handleResetZoom}
-            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
-            aria-label="Reset zoom"
-            disabled={isExporting}
-          >
-            <RefreshCw size={18} />
-          </button>
-          <button
-            onClick={handleZoomIn}
-            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors"
-            aria-label="Zoom in"
-            disabled={isExporting}
-          >
-            <ZoomIn size={18} />
-          </button>
-          <div className="w-px h-5 bg-gray-300 mx-1"></div>
-          <button
-            onClick={handleExportImage}
-            className="text-mood-color p-1 rounded hover:bg-mood-color-10 transition-colors flex items-center gap-1"
-            aria-label="Export as image"
-            title="Export as image"
-            disabled={isExporting}
-          >
-            {isExporting ? (
-              <Loader size={18} className="animate-spin" />
-            ) : (
-              <Download size={18} />
-            )}
-          </button>
         </div>
       </div>
       

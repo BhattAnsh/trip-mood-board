@@ -158,6 +158,19 @@ export default {
 					'0%': { backgroundPosition: '0% 50%' },
 					'100%': { backgroundPosition: '100% 50%' },
 				},
+				'phone-rotate': {
+					'0%': { transform: 'rotate(0deg)' },
+					'25%': { transform: 'rotate(0deg)' },
+					'35%': { transform: 'rotate(-90deg)' },
+					'65%': { transform: 'rotate(-90deg)' },
+					'75%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(0deg)' },
+				},
+				'arrow-pulse': {
+					'0%': { transform: 'scale(1)', opacity: '0.7' },
+					'50%': { transform: 'scale(1.2)', opacity: '1' },
+					'100%': { transform: 'scale(1)', opacity: '0.7' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -172,6 +185,8 @@ export default {
 				'music-progress': 'music-progress 15s linear infinite',
 				'gradient-x': 'gradient-x 15s ease infinite',
 				'gradient-shift': 'gradient-shift 15s ease infinite',
+				'phone-rotate': 'phone-rotate 4s ease-in-out infinite',
+				'arrow-pulse': 'arrow-pulse 2s ease-in-out infinite',
 			},
 			boxShadow: {
 				'neo-flat': 'var(--neo-shadow-flat)',
